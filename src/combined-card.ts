@@ -100,7 +100,7 @@ class CombinedCard extends LitElement implements LovelaceCard {
   }
 
   private _loading(): LovelaceCard {
-    return html`<ha-card>Loading...</ha-card>` as any as LovelaceCard;
+    return html`<ha-card class="loading">Loading...</ha-card>` as any as LovelaceCard;
   }
 
   private _createCard(config: LovelaceCardConfig): LovelaceCard {
@@ -145,6 +145,10 @@ class CombinedCard extends LitElement implements LovelaceCard {
     return css`
       ha-card {
         overflow: hidden;
+      }
+
+      ha-card.loading {
+        padding: var(--spacing);
       }
     `;
   }
