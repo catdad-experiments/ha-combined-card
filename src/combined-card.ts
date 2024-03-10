@@ -19,6 +19,12 @@ const HELPERS = ((loadCardHelpers, callbacks: fn[]) => {
 
   loadCardHelpers().then(helpers => {
     _helpers = helpers;
+
+    for (const func of callbacks) {
+      func();
+    }
+
+    callbacks = []
   }).catch(err => {
     throw new Error(`Failed to load card helpers. ${fileBugStr}: ${err.message}`);
   });
@@ -72,7 +78,7 @@ class CombinedCard extends LitElement implements LovelaceCard {
 
     if (!HELPERS.loaded) {
       HELPERS.push(() => {
-        LOG('SETTING CONFIG AFTER HELPERS LOADED');
+        LOG('setting card config after helpers have loaded');
         const _config: LovelaceCardConfig = that._config || config;
         that._config = { ..._config };
       });
@@ -83,6 +89,7 @@ class CombinedCard extends LitElement implements LovelaceCard {
 
   protected render() {
     if (!this._config || !HELPERS.loaded) {
+      LOG(`Rendering card: { config: ${!!this._config}, helpers: ${HELPERS.loaded} }`);
       return this._loading();
     }
 
@@ -100,11 +107,12 @@ class CombinedCard extends LitElement implements LovelaceCard {
   }
 
   private _loading(): LovelaceCard {
-    return html`<ha-card>Loading...</ha-card>` as any as LovelaceCard;
+    return html`<ha-card class="loading">Loading...</ha-card>` as any as LovelaceCard;
   }
 
   private _createCard(config: LovelaceCardConfig): LovelaceCard {
     if (!HELPERS.loaded) {
+      LOG('Creating card without helpers loaded');
       return this._loading();
     }
 
@@ -145,6 +153,10 @@ class CombinedCard extends LitElement implements LovelaceCard {
     return css`
       ha-card {
         overflow: hidden;
+      }
+
+      ha-card.loading {
+        padding: var(--spacing);
       }
     `;
   }
