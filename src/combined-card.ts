@@ -5,31 +5,40 @@ import * as pjson from '../package.json';
 
 type fn = (...args: any[]) => void;
 
-// TODO clean this up
-// const { _HELPERS, _CALLBACKS } = (() => {})();
-let UMM: fn[] = [];
-let THINGS;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const HELPERS = (window as any).loadCardHelpers ? (window as any).loadCardHelpers() : undefined;
-if (HELPERS.then) {
-  HELPERS.then(helpers => {
-    console.log('HELPERS LOADED', UMM.length);
-    THINGS = helpers;
+const HELPERS = ((loadCardHelpers, callbacks: fn[]) => {
+  const fileBugStr = 'Please file a bug at https://github.com/catdad-experiments/ha-combined-card and explain your setup.';
 
-    for (const func of UMM) {
-      func();
-    }
+  if (!loadCardHelpers) {
+    throw new Error(`This instance of Home Assistant does not have global card helpers. ${fileBugStr}`);
+  }
 
-    UMM = [];
+  let _helpers;
+
+  loadCardHelpers().then(helpers => {
+    _helpers = helpers;
+  }).catch(err => {
+    throw new Error(`Failed to load card helpers. ${fileBugStr}: ${err.message}`);
   });
-}
+
+  return {
+    push: (func: fn) => void callbacks.push(func),
+    get helpers() {
+      return _helpers;
+    },
+    get loaded() {
+      return !!_helpers;
+    }
+  };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+})((window as any).loadCardHelpers, []);
 
 const NAME = 'catdad-card';
 
-console.info(
-  `%c ${NAME} v${pjson.version} `,
-  'color: #bad155; font-weight: bold; background: #555; border-radius: 2rem;',
-);
+const LOG = (first: string, ...args: any[]) => {
+  console.log(`%c ${NAME} v${pjson.version} \x1B[m ${first}`, 'color: #bad155; font-weight: bold; background: #555; border-radius: 2rem;', ...args);
+};
+
+LOG('loaded');
 
 class CatdadCombinedCard extends LitElement implements LovelaceCard {
   @state()
@@ -57,11 +66,9 @@ class CatdadCombinedCard extends LitElement implements LovelaceCard {
     this._config = config;
     const that = this;
 
-    console.log('SETTING CONFIG', THINGS);
-
-    if (!THINGS) {
-      UMM.push(() => {
-        console.log('SETTING CONFIG AGAIN IN A CALLBACK');
+    if (!HELPERS.loaded) {
+      HELPERS.push(() => {
+        LOG('SETTING CONFIG AFTER HELPERS LOADED');
         const _config: LovelaceCardConfig = that._config || config;
         that._config = { ..._config };
       });
@@ -71,9 +78,8 @@ class CatdadCombinedCard extends LitElement implements LovelaceCard {
   }
 
   protected render() {
-    console.log('RENDER');
-    if (!this._config || !THINGS) {
-      return nothing;
+    if (!this._config || !HELPERS.loaded) {
+      return this._loading();
     }
 
     const element = this._createCard(this._config);
@@ -89,14 +95,16 @@ class CatdadCombinedCard extends LitElement implements LovelaceCard {
     `;
   }
 
-  private _createCard(config: LovelaceCardConfig): LovelaceCard {
-    console.log('CREATE CARD');
+  private _loading(): LovelaceCard {
+    return html`<ha-card>Loading...</ha-card>` as any as LovelaceCard;
+  }
 
-    if (!THINGS) {
-      return html`<div>nothing to render yet</div>` as any as LovelaceCard;
+  private _createCard(config: LovelaceCardConfig): LovelaceCard {
+    if (!HELPERS.loaded) {
+      return this._loading();
     }
 
-    const element: LovelaceCard = THINGS.createCardElement({
+    const element: LovelaceCard = HELPERS.helpers.createCardElement({
       ...config,
       type: 'vertical-stack'
     });
