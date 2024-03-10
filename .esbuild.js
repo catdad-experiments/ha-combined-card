@@ -13,7 +13,7 @@ const writeOutput = async file => {
   await fs.writeFile(path.resolve(OUTDIR, 'combined-card.js'), file.contents);
 
   if (dev) {
-    await fs.writeFile('P:\\homeassistant\\www\\catdad\\combined-card.js', file.contents);
+    await fs.writeFile('P:/homeassistant/www/catdad/combined-card.js', file.contents);
   }
 };
 
