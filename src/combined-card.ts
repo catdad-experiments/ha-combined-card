@@ -5,6 +5,9 @@ import * as pjson from '../package.json';
 
 type fn = (...args: any[]) => void;
 
+// Home Assistant really needs to make this an SDK so that we can
+// stop trying to hack it. When they use these helpers, they can
+// use them synchronously, but third-party devs can't.
 const HELPERS = ((loadCardHelpers, callbacks: fn[]) => {
   const fileBugStr = 'Please file a bug at https://github.com/catdad-experiments/ha-combined-card and explain your setup.';
 
@@ -32,7 +35,7 @@ const HELPERS = ((loadCardHelpers, callbacks: fn[]) => {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 })((window as any).loadCardHelpers, []);
 
-const NAME = 'catdad-card';
+const NAME = 'combined-card';
 
 const LOG = (first: string, ...args: any[]) => {
   console.log(`%c ${NAME} v${pjson.version} \x1B[m ${first}`, 'color: #bad155; font-weight: bold; background: #555; border-radius: 2rem;', ...args);
@@ -40,7 +43,7 @@ const LOG = (first: string, ...args: any[]) => {
 
 LOG('loaded');
 
-class CatdadCombinedCard extends LitElement implements LovelaceCard {
+class CombinedCard extends LitElement implements LovelaceCard {
   @state()
   protected _config?: LovelaceCardConfig;
 
@@ -150,4 +153,4 @@ class CatdadCombinedCard extends LitElement implements LovelaceCard {
   }
 }
 
-customElements.define(NAME, CatdadCombinedCard);
+customElements.define(NAME, CombinedCard);
