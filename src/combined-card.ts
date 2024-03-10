@@ -80,6 +80,7 @@ class CombinedCard extends LitElement implements LovelaceCard {
     }
 
     if (element) {
+      LOG('registering rebuild event');
       element.addEventListener(
         'll-rebuild',
         (ev) => {
@@ -97,6 +98,7 @@ class CombinedCard extends LitElement implements LovelaceCard {
     cardElToReplace: LovelaceCard,
     config: LovelaceCardConfig
   ): void {
+    LOG('rebuild');
     const newCardEl = this._createCard(config);
     if (cardElToReplace.parentElement) {
       cardElToReplace.parentElement.replaceChild(newCardEl, cardElToReplace);
