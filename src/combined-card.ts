@@ -1,6 +1,6 @@
 import { css, CSSResultGroup, html, LitElement } from "lit";
 import { property, state, customElement } from "lit/decorators.js";
-import { HomeAssistant, LovelaceCardConfig, LovelaceCard, computeCardSize } from 'custom-card-helpers';
+import { HomeAssistant, LovelaceCardConfig, LovelaceCard, computeCardSize, LovelaceCardEditor } from 'custom-card-helpers';
 import * as pjson from '../package.json';
 
 type fn = (...args: any[]) => void;
@@ -153,3 +153,39 @@ class CombinedCard extends LitElement implements LovelaceCard {
     this._hass = hass;
   }
 }
+
+@customElement(`${NAME}-editor`)
+class CombinedCardEditor extends LitElement implements LovelaceCardEditor {
+  @state()
+  protected _config: LovelaceCardConfig = {
+    type: `custom:${NAME}`,
+    cards: []
+  };
+
+  private _hass?: HomeAssistant;
+
+  setConfig(config: LovelaceCardConfig): void {
+    LOG('set config', config);
+    this._config = config;
+  }
+
+  protected render() {
+    return html`<ha-form>
+      .hass=${this._hass}
+      .data=${this._config}
+    </ha-form>`;
+  }
+
+  set hass(hass: HomeAssistant) {
+    this._hass = hass;
+  }
+}
+
+// @ts-ignore
+window.customCards = window.customCards || [];
+// @ts-ignore
+window.customCards.push({
+    type: NAME,
+    name: "Combined Card",
+    description: "Combine a stack of cards into a single seamless card",
+});
