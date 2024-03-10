@@ -1,5 +1,5 @@
-import { css, CSSResultGroup, html, LitElement, nothing } from "lit";
-import { property, state } from "lit/decorators.js";
+import { css, CSSResultGroup, html, LitElement } from "lit";
+import { property, state, customElement } from "lit/decorators.js";
 import { HomeAssistant, LovelaceCardConfig, LovelaceCard, computeCardSize } from 'custom-card-helpers';
 import * as pjson from '../package.json';
 
@@ -43,6 +43,7 @@ const LOG = (first: string, ...args: any[]) => {
 
 LOG('loaded');
 
+@customElement(NAME)
 class CombinedCard extends LitElement implements LovelaceCard {
   @state()
   protected _config?: LovelaceCardConfig;
@@ -152,5 +153,3 @@ class CombinedCard extends LitElement implements LovelaceCard {
     this._hass = hass;
   }
 }
-
-customElements.define(NAME, CombinedCard);
