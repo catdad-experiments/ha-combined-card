@@ -82,8 +82,6 @@ class CombinedCard extends LitElement implements LovelaceCard {
         const _config: LovelaceCardConfig = that._config || config;
         that._config = { ..._config };
       });
-    } else {
-      this._card = this._createCard(config);
     }
   }
 
@@ -121,12 +119,13 @@ class CombinedCard extends LitElement implements LovelaceCard {
       type: 'vertical-stack'
     });
 
+    this._card = element;
+
     if (this._hass) {
       element.hass = this._hass;
     }
 
     if (element) {
-      LOG('registering rebuild event');
       element.addEventListener(
         'll-rebuild',
         (ev) => {
@@ -144,7 +143,6 @@ class CombinedCard extends LitElement implements LovelaceCard {
     cardElToReplace: LovelaceCard,
     config: LovelaceCardConfig
   ): void {
-    LOG('rebuild');
     const newCardEl = this._createCard(config);
     if (cardElToReplace.parentElement) {
       cardElToReplace.parentElement.replaceChild(newCardEl, cardElToReplace);
@@ -165,5 +163,13 @@ class CombinedCard extends LitElement implements LovelaceCard {
 
   set hass(hass: HomeAssistant) {
     this._hass = hass;
+
+    // we don't really need to rebuild this card
+    // since it is only a passthrough, but
+    // set hass of the nested stack so that it
+    // rebuilds itself
+    if (this._card) {
+      this._card.hass = hass;
+    }
   }
 }
