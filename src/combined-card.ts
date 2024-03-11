@@ -1,7 +1,7 @@
 import { css, CSSResultGroup, html, LitElement } from "lit";
 import { property, state, query, customElement } from "lit/decorators.js";
-import { HomeAssistant, LovelaceCardConfig, LovelaceCard, computeCardSize, LovelaceCardEditor } from 'custom-card-helpers';
-import { NAME, HELPERS, LOG } from './utils';
+import { HomeAssistant, LovelaceCardConfig, LovelaceCard, computeCardSize } from 'custom-card-helpers';
+import { NAME, EDITOR_NAME, HELPERS, LOG } from './utils';
 
 @customElement(NAME)
 class CombinedCard extends LitElement implements LovelaceCard {
@@ -18,8 +18,10 @@ class CombinedCard extends LitElement implements LovelaceCard {
       return 1;
     }
 
-    const card = this._createCard(this._config);
-    return await computeCardSize(card);
+    const card = this._card || this._createCard(this._config);
+    const size = await computeCardSize(card);
+
+    return size;
   }
 
   public setConfig(config: LovelaceCardConfig): void {
@@ -32,9 +34,8 @@ class CombinedCard extends LitElement implements LovelaceCard {
 
     if (!HELPERS.loaded) {
       HELPERS.push(() => {
-        LOG('setting card config after helpers have loaded');
-        const _config: LovelaceCardConfig = that._config || config;
-        that._config = { ..._config };
+        LOG('re-rendering card after helpers have loaded');
+        that._rebuildSelf();
       });
     }
   }
@@ -59,12 +60,12 @@ class CombinedCard extends LitElement implements LovelaceCard {
   }
 
   private _loading(): LovelaceCard {
+    LOG('render loading card');
     return html`<ha-card class="loading">Loading...</ha-card>` as any as LovelaceCard;
   }
 
   private _createCard(config: LovelaceCardConfig): LovelaceCard {
     if (!HELPERS.loaded) {
-      LOG('Creating card without helpers loaded');
       return this._loading();
     }
 
@@ -91,6 +92,18 @@ class CombinedCard extends LitElement implements LovelaceCard {
     }
 
     return element;
+  }
+
+  private _rebuildSelf(): void {
+    const cardElToReplace = this._card as LovelaceCard;
+    const config = this._config as LovelaceCardConfig;
+
+    if (!cardElToReplace || !config) {
+      LOG('skipping rebuild self');
+      return;
+    }
+
+    this._rebuildCard(cardElToReplace, config);
   }
 
   private _rebuildCard(
@@ -125,6 +138,17 @@ class CombinedCard extends LitElement implements LovelaceCard {
     if (this._card) {
       this._card.hass = hass;
     }
+  }
+
+  static getConfigElement() {
+    return document.createElement(EDITOR_NAME);
+  }
+
+  static getStubConfig() {
+    return {
+      type: 'custom:combined-card',
+      cards: []
+    };
   }
 }
 
