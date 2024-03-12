@@ -1,7 +1,7 @@
 import { css, CSSResultGroup, html, LitElement } from "lit";
-import { property, state, query, customElement } from "lit/decorators.js";
+import { property, state, customElement } from "lit/decorators.js";
 import { HomeAssistant, LovelaceCardConfig, LovelaceCard, computeCardSize } from 'custom-card-helpers';
-import { NAME, EDITOR_NAME, HELPERS, LOG } from './utils';
+import { NAME, EDITOR_NAME, HELPERS, LOG, loadStackEditor } from './utils';
 
 @customElement(NAME)
 class CombinedCard extends LitElement implements LovelaceCard {
@@ -99,7 +99,6 @@ class CombinedCard extends LitElement implements LovelaceCard {
     const config = this._config as LovelaceCardConfig;
 
     if (!cardElToReplace || !config) {
-      LOG('skipping rebuild self');
       return;
     }
 
@@ -140,8 +139,15 @@ class CombinedCard extends LitElement implements LovelaceCard {
     }
   }
 
-  static getConfigElement() {
-    return document.createElement(EDITOR_NAME);
+  public static async getConfigElement() {
+    const stackCardName = await loadStackEditor();
+    const stackCard = document.createElement(stackCardName);
+
+    const element = document.createElement(EDITOR_NAME);
+    // @ts-ignore
+    element.cardEditor = await stackCard.constructor.getConfigElement();
+
+    return element;
   }
 
   static getStubConfig() {

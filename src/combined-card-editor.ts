@@ -1,23 +1,24 @@
-import { css, CSSResultGroup, html, LitElement } from "lit";
-import { property, state, query, customElement } from "lit/decorators.js";
-import { HomeAssistant, LovelaceCardConfig, LovelaceCard, computeCardSize, LovelaceCardEditor } from 'custom-card-helpers';
-import { NAME, EDITOR_NAME, HELPERS, LOG } from './utils';
+import { html, LitElement } from "lit";
+import { HomeAssistant, LovelaceCardConfig, LovelaceCardEditor } from 'custom-card-helpers';
+import { NAME, EDITOR_NAME, LOG } from './utils';
 
-@customElement(EDITOR_NAME)
 class CombinedCardEditor extends LitElement implements LovelaceCardEditor {
-  @state()
-  protected _config: LovelaceCardConfig = {
-    type: `custom:${NAME}`,
-    cards: []
-  };
-
-  @query("hui-card-element-editor") _cardEditorEl?;
-
   private _hass?: HomeAssistant;
+  private _stackCardEditor?;
+
+  private _setEditorConfig(config: LovelaceCardConfig) {
+    // @ts-ignore
+    if (this._stackCardEditor) {
+      this._stackCardEditor.setConfig({
+        type: 'vertical-stack',
+        cards: config.cards || []
+      });
+    }
+  }
 
   setConfig(config: LovelaceCardConfig): void {
     LOG('setConfig', config);
-    this._config = config;
+    this._setEditorConfig(config);
   }
 
   configChanged(newCondfig: LovelaceCardConfig): void {
@@ -29,21 +30,43 @@ class CombinedCardEditor extends LitElement implements LovelaceCardEditor {
     // @ts-ignore
     event.detail = { config: newCondfig };
 
+    LOG('configChanged', newCondfig);
+
     this.dispatchEvent(event);
   }
 
   protected render() {
-    return html`<div>The visual editor is not implemented yet</div>`;
+    LOG('render', this._stackCardEditor);
+
+    this._stackCardEditor.addEventListener('config-changed', ev => {
+      ev.stopPropagation();
+
+      this.configChanged({
+        ...ev.detail.config,
+        type: `custom:${NAME}`
+      });
+    });
+
+    return html`<div>${this._stackCardEditor}</div>`;
   }
 
   set hass(hass: HomeAssistant) {
     this._hass = hass;
+
+    if (this._stackCardEditor) {
+      this._stackCardEditor.hass = hass;
+    }
+  }
+
+  set lovelace(ll) {
+    if (this._stackCardEditor) {
+      this._stackCardEditor.lovelace = ll;
+    }
+  }
+
+  set cardEditor(editor) {
+    this._stackCardEditor = editor;
   }
 }
 
-customElements.whenDefined('hui-stack-card-editor').then((Element) => {
-  LOG('stack editor defined', Element);
-});
-HELPERS.push(() => {
-  console.log(HELPERS.helpers);
-});
+customElements.define(EDITOR_NAME, CombinedCardEditor);

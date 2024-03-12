@@ -51,7 +51,43 @@ export const HELPERS = ((loadCardHelpers, callbacks: fn[]) => {
     },
     get loaded() {
       return !!_helpers;
+    },
+    get whenLoaded() {
+      return new Promise(resolve => {
+        if (loaded) {
+          return resolve(_helpers);
+        }
+
+        callbacks.push(() => resolve(_helpers));
+      });
     }
   };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 })((window as any).loadCardHelpers, []);
+
+export const loadStackEditor = ((name) => async () => {
+  if (name.length) {
+    return name;
+  }
+
+  const [huiStackCardEditor] = await Promise.all([
+    customElements.whenDefined('hui-stack-card-editor').then(() => {
+      return 'hui-stack-card-editor';
+    }),
+    customElements.whenDefined('hui-vertical-stack-card').then((Element) => {
+      // @ts-ignore
+      Element.getConfigElement();
+    }),
+    HELPERS.whenLoaded.then(() => {
+      console.log('helpers', HELPERS.helpers);
+      HELPERS.helpers.createCardElement({
+        type: 'vertical-stack',
+        cards: []
+      });
+    })
+  ]);
+
+  name = 'hui-vertical-stack-card';
+
+  return name;
+})('');
