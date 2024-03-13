@@ -78,9 +78,8 @@ export const loadStackEditor = async () => {
       return Element.getConfigElement();
     }),
     // load a stack card so that we can use it to load its editor
-    HELPERS.whenLoaded.then(() => {
-      console.log('helpers', HELPERS.helpers);
-      HELPERS.helpers.createCardElement({
+    HELPERS.whenLoaded.then((helpers) => {
+      (helpers as any).createCardElement({
         type: 'vertical-stack',
         cards: []
       });
