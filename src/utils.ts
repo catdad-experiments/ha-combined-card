@@ -16,31 +16,31 @@ LOG('loaded');
 // use them synchronously, but third-party devs can't.
 export const HELPERS = ((loadCardHelpers, callbacks: fn[]) => {
   const fileBugStr = 'Please file a bug at https://github.com/catdad-experiments/ha-combined-card and explain your setup.';
-  let loaded = false;
+  let _helpers;
 
   if (!loadCardHelpers) {
     throw new Error(`This instance of Home Assistant does not have global card helpers. ${fileBugStr}`);
   }
 
-  let _helpers;
-
   loadCardHelpers().then(helpers => {
     _helpers = helpers;
 
     for (const func of callbacks) {
-      func();
+      try {
+        func();
+      } catch (e) {
+        console.error(`Failed to execute helpers callback:`, e);
+      }
     }
 
     callbacks = [];
-
-    loaded = true;
   }).catch(err => {
     throw new Error(`Failed to load card helpers. ${fileBugStr}: ${err.message}`);
   });
 
   return {
     push: (func: fn) => {
-      if (loaded) {
+      if (_helpers) {
         func();
       } else {
         callbacks.push(func);
@@ -54,7 +54,7 @@ export const HELPERS = ((loadCardHelpers, callbacks: fn[]) => {
     },
     get whenLoaded() {
       return new Promise(resolve => {
-        if (loaded) {
+        if (_helpers) {
           return resolve(_helpers);
         }
 
@@ -69,11 +69,9 @@ export const HELPERS = ((loadCardHelpers, callbacks: fn[]) => {
 export const loadStackEditor = async () => {
   const name = 'hui-vertical-stack-card';
 
-  const [huiStackCardEditor] = await Promise.all([
+  await Promise.all([
     // make sure the editor for the stack cards is loaded
-    customElements.whenDefined('hui-stack-card-editor').then(() => {
-      return 'hui-stack-card-editor';
-    }),
+    customElements.whenDefined('hui-stack-card-editor'),
     // load the editor for the stack cards
     customElements.whenDefined(name).then((Element) => {
       // @ts-ignore
