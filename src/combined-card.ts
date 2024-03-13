@@ -7,11 +7,12 @@ import { NAME, EDITOR_NAME, HELPERS, LOG, loadStackEditor } from './utils';
 class CombinedCard extends LitElement implements LovelaceCard {
   @state()
   protected _config?: LovelaceCardConfig;
+  @state()
+  private _hass?: HomeAssistant;
 
   @property()
   protected _card?: LovelaceCard;
 
-  private _hass?: HomeAssistant;
 
   public async getCardSize(): Promise<number> {
     if (!this._config) {
@@ -33,9 +34,9 @@ class CombinedCard extends LitElement implements LovelaceCard {
     const that = this;
 
     if (!HELPERS.loaded) {
-      HELPERS.push(() => {
+      HELPERS.whenLoaded.then(() => {
         LOG('re-rendering card after helpers have loaded');
-        that._rebuildSelf();
+        that.render();
       });
     }
   }
