@@ -74,8 +74,7 @@ export const loadStackEditor = async () => {
     customElements.whenDefined('hui-stack-card-editor'),
     // load the editor for the stack cards
     customElements.whenDefined(name).then((Element) => {
-      // @ts-ignore
-      return Element.getConfigElement();
+      return (Element as any).getConfigElement();
     }),
     // load a stack card so that we can use it to load its editor
     HELPERS.whenLoaded.then((helpers) => {
