@@ -65,19 +65,21 @@ export const HELPERS = ((loadCardHelpers, callbacks: fn[]) => {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 })((window as any).loadCardHelpers, []);
 
-export const loadStackEditor = ((name) => async () => {
-  if (name.length) {
-    return name;
-  }
+// Home Assistant REALLY needs to create an SDK for this
+export const loadStackEditor = async () => {
+  const name = 'hui-vertical-stack-card';
 
   const [huiStackCardEditor] = await Promise.all([
+    // make sure the editor for the stack cards is loaded
     customElements.whenDefined('hui-stack-card-editor').then(() => {
       return 'hui-stack-card-editor';
     }),
-    customElements.whenDefined('hui-vertical-stack-card').then((Element) => {
+    // load the editor for the stack cards
+    customElements.whenDefined(name).then((Element) => {
       // @ts-ignore
-      Element.getConfigElement();
+      return Element.getConfigElement();
     }),
+    // load a stack card so that we can use it to load its editor
     HELPERS.whenLoaded.then(() => {
       console.log('helpers', HELPERS.helpers);
       HELPERS.helpers.createCardElement({
@@ -87,7 +89,10 @@ export const loadStackEditor = ((name) => async () => {
     })
   ]);
 
-  name = 'hui-vertical-stack-card';
+  // create a stack card, then create an instance of
+  // its editor for us to use as the combined-card editor
+  const stackCard = document.createElement(name);
 
-  return name;
-})('');
+  // @ts-ignore
+  return await stackCard.constructor.getConfigElement();
+};

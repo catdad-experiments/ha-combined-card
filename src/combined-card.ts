@@ -139,13 +139,13 @@ class CombinedCard extends LitElement implements LovelaceCard {
     }
   }
 
+  // Note: this is what builds the visual editor for this card
+  // the actual element it is creating is the one in
+  // combined-card-editor.ts
   public static async getConfigElement() {
-    const stackCardName = await loadStackEditor();
-    const stackCard = document.createElement(stackCardName);
-
     const element = document.createElement(EDITOR_NAME);
     // @ts-ignore
-    element.cardEditor = await stackCard.constructor.getConfigElement();
+    element.cardEditor = await loadStackEditor();
 
     return element;
   }
