@@ -62,7 +62,15 @@ class CombinedCard extends LitElement implements LovelaceCard {
 
   private _loading(): LovelaceCard {
     LOG('render loading card');
-    return html`<ha-card class="loading">Loading...</ha-card>` as any as LovelaceCard;
+
+    const style = [
+      'height: 50px',
+      'padding: var(--spacing, 12px)',
+      'display: flex',
+      'align-items: center'
+    ];
+
+    return html`<ha-card style="${style.join(';')}" class="loading">Loading...</ha-card>` as any as LovelaceCard;
   }
 
   private _createCard(config: LovelaceCardConfig): LovelaceCard {
@@ -120,10 +128,6 @@ class CombinedCard extends LitElement implements LovelaceCard {
     return css`
       ha-card {
         overflow: hidden;
-      }
-
-      ha-card.loading {
-        padding: var(--spacing);
       }
     `;
   }
