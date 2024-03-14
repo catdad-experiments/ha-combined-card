@@ -70,8 +70,10 @@ class CombinedCard extends LitElement implements LovelaceCard {
 
     const element = this._createCard(this._config);
     const styles = [
+      '--ha-card-border-width: 0px',
       '--ha-card-border-color: rgba(0, 0, 0, 0)',
-      '--ha-card-box-shadow: none'
+      '--ha-card-box-shadow: none',
+      '--ha-card-border-radius: none'
     ];
 
     return html`
