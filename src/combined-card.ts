@@ -1,6 +1,6 @@
 import { css, CSSResultGroup, html, LitElement } from "lit";
 import { property, state, customElement } from "lit/decorators.js";
-import { HomeAssistant, LovelaceCardConfig, LovelaceCard, computeCardSize } from 'custom-card-helpers';
+import { HomeAssistant, LovelaceCardConfig, LovelaceCard } from 'custom-card-helpers';
 import { NAME, EDITOR_NAME, HELPERS, LOG, loadStackEditor } from './utils';
 
 @customElement(NAME)
@@ -13,14 +13,38 @@ class CombinedCard extends LitElement implements LovelaceCard {
   @property()
   protected _card?: LovelaceCard;
 
-
   public async getCardSize(): Promise<number> {
     if (!this._config) {
-      return 1;
+      return 0;
     }
 
-    const card = this._card || this._createCard(this._config);
-    const size = await computeCardSize(card);
+    await HELPERS.whenLoaded;
+
+    const that = this;
+
+    const size: number = await new Promise(r => {
+      const tryToGetSize = async () => {
+        const el = that._createCard(that._config as LovelaceCardConfig);
+
+        if (el.getCardSize) {
+          return await el.getCardSize();
+        }
+
+        return null;
+      };
+
+      const recurse = () => {
+        tryToGetSize().then((size: null | number) => {
+          if (typeof size === 'number') {
+            return r(size);
+          }
+
+          setTimeout(() => recurse(), 50);
+        });
+      };
+
+      recurse();
+    });
 
     return size;
   }
