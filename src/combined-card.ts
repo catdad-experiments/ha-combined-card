@@ -6,9 +6,25 @@ import { NAME, EDITOR_NAME, HELPERS, LOG, loadStackEditor } from './utils';
 @customElement(NAME)
 class CombinedCard extends LitElement implements LovelaceCard {
   @state() private _config?: LovelaceCardConfig;
-  @state() private _card?: LovelaceCard;
-  @property() public hass?: HomeAssistant;
-  @property() public editMode: boolean = false;
+  private _card?: LovelaceCard;
+  private _hass?: HomeAssistant;
+  private _editMode: boolean = false;
+
+  set hass(hass: HomeAssistant) {
+    this._hass = hass;
+
+    if (this._card) {
+      this._card.hass = hass;
+    }
+  }
+
+  set editMode(editMode: boolean) {
+    this._editMode = editMode;
+
+    if (this._card) {
+      this._card.editMode = editMode;
+    }
+  }
 
   public async getCardSize(): Promise<number> {
     if (!this._config) {
@@ -108,11 +124,11 @@ class CombinedCard extends LitElement implements LovelaceCard {
 
     this._card = element;
 
-    if (this.hass) {
-      element.hass = this.hass;
+    if (this._hass) {
+      element.hass = this._hass;
     }
 
-    element.editMode = this.editMode;
+    element.editMode = this._editMode;
 
     if (element) {
       element.addEventListener(
@@ -155,26 +171,6 @@ class CombinedCard extends LitElement implements LovelaceCard {
         overflow: hidden;
       }
     `;
-  }
-
-  // syncs the various states with the underlying card
-  protected updated(changedProps: Map<any, any>) {
-    if (!this._card) {
-      return;
-    }
-
-    if (changedProps.has('_hass')) {
-      this._card.hass = this.hass;
-    }
-
-    if (changedProps.has('_editMode')) {
-      this._card.editMode = this.editMode;
-    }
-
-    if (changedProps.has('_card')) {
-      this._card.hass = this.hass;
-      this._card.editMode = this.editMode;
-    }
   }
 
   // Note: this is what builds the visual editor for this card
