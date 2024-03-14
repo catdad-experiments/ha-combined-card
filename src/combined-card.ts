@@ -5,13 +5,10 @@ import { NAME, EDITOR_NAME, HELPERS, LOG, loadStackEditor } from './utils';
 
 @customElement(NAME)
 class CombinedCard extends LitElement implements LovelaceCard {
-  @state()
-  protected _config?: LovelaceCardConfig;
-  @state()
-  private _hass?: HomeAssistant;
-
-  @property()
-  protected _card?: LovelaceCard;
+  @state() private _config?: LovelaceCardConfig;
+  @state() private _card?: LovelaceCard;
+  @property() public hass?: HomeAssistant;
+  @property() public editMode: boolean = false;
 
   public async getCardSize(): Promise<number> {
     if (!this._config) {
@@ -109,9 +106,11 @@ class CombinedCard extends LitElement implements LovelaceCard {
 
     this._card = element;
 
-    if (this._hass) {
-      element.hass = this._hass;
+    if (this.hass) {
+      element.hass = this.hass;
     }
+
+    element.editMode = this.editMode;
 
     if (element) {
       element.addEventListener(
@@ -156,15 +155,23 @@ class CombinedCard extends LitElement implements LovelaceCard {
     `;
   }
 
-  set hass(hass: HomeAssistant) {
-    this._hass = hass;
+  // syncs the various states with the underlying card
+  protected updated(changedProps: Map<any, any>) {
+    if (!this._card) {
+      return;
+    }
 
-    // we don't really need to rebuild this card
-    // since it is only a passthrough, but
-    // set hass of the nested stack so that it
-    // rebuilds itself
-    if (this._card) {
-      this._card.hass = hass;
+    if (changedProps.has('_hass')) {
+      this._card.hass = this.hass;
+    }
+
+    if (changedProps.has('_editMode')) {
+      this._card.editMode = this.editMode;
+    }
+
+    if (changedProps.has('_card')) {
+      this._card.hass = this.hass;
+      this._card.editMode = this.editMode;
     }
   }
 
