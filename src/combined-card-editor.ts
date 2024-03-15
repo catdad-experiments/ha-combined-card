@@ -1,9 +1,10 @@
 import { html, LitElement } from "lit";
-import { HomeAssistant, LovelaceCardConfig, LovelaceCardEditor } from 'custom-card-helpers';
+import { HomeAssistant, LovelaceCardConfig, LovelaceCardEditor, LovelaceConfig } from 'custom-card-helpers';
 import { NAME, EDITOR_NAME, LOG } from './utils';
 
 class CombinedCardEditor extends LitElement implements LovelaceCardEditor {
   private _hass?: HomeAssistant;
+  private _lovelace?: LovelaceConfig;
   private _stackCardEditor?;
 
   private _setEditorConfig(config: LovelaceCardConfig) {
@@ -38,6 +39,14 @@ class CombinedCardEditor extends LitElement implements LovelaceCardEditor {
   protected render() {
     LOG('render', this._stackCardEditor);
 
+    if (this._hass) {
+      this._stackCardEditor.hass = this._hass;
+    }
+
+    if (this._lovelace) {
+      this._stackCardEditor.lovelace = this._lovelace;
+    }
+
     this._stackCardEditor.addEventListener('config-changed', ev => {
       ev.stopPropagation();
 
@@ -58,7 +67,9 @@ class CombinedCardEditor extends LitElement implements LovelaceCardEditor {
     }
   }
 
-  set lovelace(ll) {
+  set lovelace(ll: LovelaceConfig) {
+    this._lovelace = ll;
+
     if (this._stackCardEditor) {
       this._stackCardEditor.lovelace = ll;
     }
