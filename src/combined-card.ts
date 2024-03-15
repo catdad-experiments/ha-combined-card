@@ -73,6 +73,7 @@ class CombinedCard extends LitElement implements LovelaceCard {
     if (!HELPERS.loaded) {
       HELPERS.whenLoaded.then(() => {
         LOG('re-rendering card after helpers have loaded');
+        that._config = { ...(that._config || config) };
         that.render();
       });
     }
