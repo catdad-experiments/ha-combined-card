@@ -1,5 +1,5 @@
 import { css, CSSResultGroup, html, LitElement } from "lit";
-import { property, state, customElement } from "lit/decorators.js";
+import { state, customElement } from "lit/decorators.js";
 import { HomeAssistant, LovelaceCardConfig, LovelaceCard } from 'custom-card-helpers';
 import { NAME, EDITOR_NAME, HELPERS, LOG, loadStackEditor } from './utils';
 
