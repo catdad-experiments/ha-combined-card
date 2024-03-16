@@ -1,71 +1,65 @@
 import { css, CSSResultGroup, html, LitElement } from "lit";
-import { property, state, customElement } from "lit/decorators.js";
-import { HomeAssistant, LovelaceCardConfig, LovelaceCard, computeCardSize } from 'custom-card-helpers';
-import * as pjson from '../package.json';
-
-type fn = (...args: any[]) => void;
-
-// Home Assistant really needs to make this an SDK so that we can
-// stop trying to hack it. When they use these helpers, they can
-// use them synchronously, but third-party devs can't.
-const HELPERS = ((loadCardHelpers, callbacks: fn[]) => {
-  const fileBugStr = 'Please file a bug at https://github.com/catdad-experiments/ha-combined-card and explain your setup.';
-
-  if (!loadCardHelpers) {
-    throw new Error(`This instance of Home Assistant does not have global card helpers. ${fileBugStr}`);
-  }
-
-  let _helpers;
-
-  loadCardHelpers().then(helpers => {
-    _helpers = helpers;
-
-    for (const func of callbacks) {
-      func();
-    }
-
-    callbacks = []
-  }).catch(err => {
-    throw new Error(`Failed to load card helpers. ${fileBugStr}: ${err.message}`);
-  });
-
-  return {
-    push: (func: fn) => void callbacks.push(func),
-    get helpers() {
-      return _helpers;
-    },
-    get loaded() {
-      return !!_helpers;
-    }
-  };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-})((window as any).loadCardHelpers, []);
-
-const NAME = 'combined-card';
-
-const LOG = (first: string, ...args: any[]) => {
-  console.log(`%c ${NAME} v${pjson.version} \x1B[m ${first}`, 'color: #bad155; font-weight: bold; background: #555; border-radius: 2rem;', ...args);
-};
-
-LOG('loaded');
+import { state, customElement } from "lit/decorators.js";
+import { HomeAssistant, LovelaceCardConfig, LovelaceCard } from 'custom-card-helpers';
+import { NAME, EDITOR_NAME, HELPERS, LOG, loadStackEditor } from './utils';
 
 @customElement(NAME)
 class CombinedCard extends LitElement implements LovelaceCard {
-  @state()
-  protected _config?: LovelaceCardConfig;
-
-  @property()
-  protected _card?: LovelaceCard;
-
+  @state() private _config?: LovelaceCardConfig;
+  private _card?: LovelaceCard;
   private _hass?: HomeAssistant;
+  private _editMode: boolean = false;
+
+  set hass(hass: HomeAssistant) {
+    this._hass = hass;
+
+    if (this._card) {
+      this._card.hass = hass;
+    }
+  }
+
+  set editMode(editMode: boolean) {
+    this._editMode = editMode;
+
+    if (this._card) {
+      this._card.editMode = editMode;
+    }
+  }
 
   public async getCardSize(): Promise<number> {
     if (!this._config) {
-      return 1;
+      return 0;
     }
 
-    const card = this._createCard(this._config);
-    return await computeCardSize(card);
+    await HELPERS.whenLoaded;
+
+    const that = this;
+
+    const size: number = await new Promise(r => {
+      const tryToGetSize = async () => {
+        const el = that._createCard(that._config as LovelaceCardConfig);
+
+        if (el.getCardSize) {
+          return await el.getCardSize();
+        }
+
+        return null;
+      };
+
+      const recurse = () => {
+        tryToGetSize().then((size: null | number) => {
+          if (typeof size === 'number') {
+            return r(size);
+          }
+
+          setTimeout(() => recurse(), 50);
+        });
+      };
+
+      recurse();
+    });
+
+    return size;
   }
 
   public setConfig(config: LovelaceCardConfig): void {
@@ -77,10 +71,10 @@ class CombinedCard extends LitElement implements LovelaceCard {
     const that = this;
 
     if (!HELPERS.loaded) {
-      HELPERS.push(() => {
-        LOG('setting card config after helpers have loaded');
-        const _config: LovelaceCardConfig = that._config || config;
-        that._config = { ..._config };
+      HELPERS.whenLoaded.then(() => {
+        LOG('re-rendering card after helpers have loaded');
+        that._config = { ...(that._config || config) };
+        that.render();
       });
     }
   }
@@ -93,8 +87,10 @@ class CombinedCard extends LitElement implements LovelaceCard {
 
     const element = this._createCard(this._config);
     const styles = [
+      '--ha-card-border-width: 0px',
       '--ha-card-border-color: rgba(0, 0, 0, 0)',
-      '--ha-card-box-shadow: none'
+      '--ha-card-box-shadow: none',
+      '--ha-card-border-radius: none'
     ];
 
     return html`
@@ -105,12 +101,20 @@ class CombinedCard extends LitElement implements LovelaceCard {
   }
 
   private _loading(): LovelaceCard {
-    return html`<ha-card class="loading">Loading...</ha-card>` as any as LovelaceCard;
+    LOG('render loading card');
+
+    const style = [
+      'height: 50px',
+      'padding: var(--spacing, 12px)',
+      'display: flex',
+      'align-items: center'
+    ];
+
+    return html`<ha-card style="${style.join(';')}" class="loading">Loading...</ha-card>` as any as LovelaceCard;
   }
 
   private _createCard(config: LovelaceCardConfig): LovelaceCard {
     if (!HELPERS.loaded) {
-      LOG('Creating card without helpers loaded');
       return this._loading();
     }
 
@@ -125,6 +129,8 @@ class CombinedCard extends LitElement implements LovelaceCard {
       element.hass = this._hass;
     }
 
+    element.editMode = this._editMode;
+
     if (element) {
       element.addEventListener(
         'll-rebuild',
@@ -137,6 +143,17 @@ class CombinedCard extends LitElement implements LovelaceCard {
     }
 
     return element;
+  }
+
+  private _rebuildSelf(): void {
+    const cardElToReplace = this._card as LovelaceCard;
+    const config = this._config as LovelaceCardConfig;
+
+    if (!cardElToReplace || !config) {
+      return;
+    }
+
+    this._rebuildCard(cardElToReplace, config);
   }
 
   private _rebuildCard(
@@ -154,22 +171,32 @@ class CombinedCard extends LitElement implements LovelaceCard {
       ha-card {
         overflow: hidden;
       }
-
-      ha-card.loading {
-        padding: var(--spacing);
-      }
     `;
   }
 
-  set hass(hass: HomeAssistant) {
-    this._hass = hass;
+  // Note: this is what builds the visual editor for this card
+  // the actual element it is creating is the one in
+  // combined-card-editor.ts
+  public static async getConfigElement() {
+    const element = document.createElement(EDITOR_NAME);
+    // @ts-ignore
+    element.cardEditor = await loadStackEditor();
 
-    // we don't really need to rebuild this card
-    // since it is only a passthrough, but
-    // set hass of the nested stack so that it
-    // rebuilds itself
-    if (this._card) {
-      this._card.hass = hass;
-    }
+    return element;
+  }
+
+  static getStubConfig() {
+    return {
+      type: 'custom:combined-card',
+      cards: []
+    };
   }
 }
+
+// Note: this is what adds the card to the UI card selector
+(window as any).customCards = (window as any).customCards || [];
+(window as any).customCards.push({
+  type: NAME,
+  name: "Combined Card",
+  description: "Combine a stack of cards into a single seamless card",
+});

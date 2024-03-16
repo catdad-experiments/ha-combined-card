@@ -21,7 +21,7 @@ const buildLib = async () => {
   const context = await esbuild.context({
     minify: !!prod,
     sourcemap: prod ? false : 'inline',
-    entryPoints: ['src/combined-card.ts'],
+    entryPoints: ['src/main.ts'],
     bundle: true,
     write: false,
     logLevel: verbose ? 'info' : 'error',
