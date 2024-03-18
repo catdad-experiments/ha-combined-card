@@ -42,13 +42,17 @@ jobs:
           });
 
           console.log('created release', { release });
-          const file = './dist/combined-card.js';
-          console.log('uploading', file);
+          const files = ['./dist/combined-card.js', './README.md'];
 
-          await github.repos.uploadReleaseAsset({
-            owner, repo,
-            release_id: release.data.id,
-            name: path.basename(file),
-            data: await fs.readFile(`./${file}`)
-          });
+          for (const file of files) {
+            console.log('uploading', file);
+
+            await github.repos.uploadReleaseAsset({
+              owner, repo,
+              release_id: release.data.id,
+              name: path.basename(file),
+              data: await fs.readFile(`./${file}`)
+            });
+          }
+
 
