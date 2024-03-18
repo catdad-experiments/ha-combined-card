@@ -1,0 +1,7 @@
+{
+  "name": "Combined Card",
+  "filename": "combined-card.js",
+  "render_readme": true,
+  "hide_default_branch": true,
+  "homeassistant": "2024.3.0"
+}
