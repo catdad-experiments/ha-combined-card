@@ -1,4 +1,4 @@
-# combined card
+# Home Assistant Combined Card
 
 This is a Home Assisatant Lovelace card that seemlessly combines any other cards into a single card.
 
