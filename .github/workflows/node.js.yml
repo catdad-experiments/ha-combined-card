@@ -27,6 +27,7 @@ jobs:
         github-token: ${{secrets.GITHUB_TOKEN}}
         script: |
           const fs = require('fs').promises;
+          const path = require('path');
           console.log('environment', process.versions);
 
           const { repo: { owner, repo }, sha, ref } = context;
@@ -47,7 +48,7 @@ jobs:
           await github.repos.uploadReleaseAsset({
             owner, repo,
             release_id: release.data.id,
-            name: file,
+            name: path.basename(file),
             data: await fs.readFile(`./${file}`)
           });
 
