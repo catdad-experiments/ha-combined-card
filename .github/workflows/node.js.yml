@@ -16,6 +16,10 @@ jobs:
         cache: 'npm'
     - run: npm ci
     - run: npm run build
+    - name: Run hacs validation
+      uses: hacs/action@22.5.0
+      with:
+        category: "plugin"
     - uses: actions/upload-artifact@v4
       with:
         name: dist
@@ -54,3 +58,5 @@ jobs:
               data: await fs.readFile(`./${file}`)
             });
           }
+
+
