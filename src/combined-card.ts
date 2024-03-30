@@ -6,6 +6,8 @@ import { NAME, EDITOR_NAME, HELPERS, LOG, loadStackEditor } from './utils';
 @customElement(NAME)
 class CombinedCard extends LitElement implements LovelaceCard {
   @state() private _config?: LovelaceCardConfig;
+  @state() private _helpers?;
+
   private _card?: LovelaceCard;
   private _hass?: HomeAssistant;
   private _editMode: boolean = false;
@@ -70,17 +72,18 @@ class CombinedCard extends LitElement implements LovelaceCard {
     this._config = config;
     const that = this;
 
-    if (!HELPERS.loaded) {
+    if (HELPERS.loaded) {
+      this._helpers = HELPERS.helpers;
+    } else {
       HELPERS.whenLoaded.then(() => {
         LOG('re-rendering card after helpers have loaded');
-        that._config = { ...(that._config || config) };
-        that.render();
+        that._helpers = HELPERS.helpers;
       });
     }
   }
 
   protected render() {
-    if (!this._config || !HELPERS.loaded) {
+    if (!(this._config && this._helpers)) {
       LOG(`Rendering card: { config: ${!!this._config}, helpers: ${HELPERS.loaded} }`);
       return this._loading();
     }
@@ -114,11 +117,12 @@ class CombinedCard extends LitElement implements LovelaceCard {
   }
 
   private _createCard(config: LovelaceCardConfig): LovelaceCard {
-    if (!HELPERS.loaded) {
+    // TODO does this need to be removed?
+    if (!this._helpers) {
       return this._loading();
     }
 
-    const element: LovelaceCard = HELPERS.helpers.createCardElement({
+    const element: LovelaceCard = this._helpers.createCardElement({
       ...config,
       type: 'vertical-stack'
     });
