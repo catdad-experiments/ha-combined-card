@@ -160,6 +160,8 @@ class CombinedCard extends LitElement implements LovelaceCard {
     this._rebuildCard(cardElToReplace, config);
   }
 
+  // TODO is this a mistake? should we just re-render the card instead?
+  // I don't actually remember when this does execute
   private _rebuildCard(
     cardElToReplace: LovelaceCard,
     config: LovelaceCardConfig
