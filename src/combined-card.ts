@@ -3,14 +3,18 @@ import { state, customElement } from "lit/decorators.js";
 import { HomeAssistant, LovelaceCardConfig, LovelaceCard } from 'custom-card-helpers';
 import { NAME, EDITOR_NAME, HELPERS, LOG, loadStackEditor } from './utils';
 
+const getRandomId = (): string => Math.random().toString(36).slice(2);
+
 @customElement(NAME)
 class CombinedCard extends LitElement implements LovelaceCard {
   @state() private _config?: LovelaceCardConfig;
   @state() private _helpers?;
+  @state() private _forceRender: string = getRandomId();
 
   private _card?: LovelaceCard;
   private _hass?: HomeAssistant;
   private _editMode: boolean = false;
+  private _timer?: number;
 
   set hass(hass: HomeAssistant) {
     this._hass = hass;
@@ -83,8 +87,17 @@ class CombinedCard extends LitElement implements LovelaceCard {
   }
 
   protected render() {
+    const that = this;
+
+    clearTimeout(this._timer);
+
     if (!(this._config && this._helpers)) {
       LOG(`Rendering card: { config: ${!!this._config}, helpers: ${HELPERS.loaded} }`);
+
+      this._timer = setTimeout(() => {
+        that._forceRender = getRandomId();
+      }, 1000);
+
       return this._loading();
     }
 
@@ -98,7 +111,7 @@ class CombinedCard extends LitElement implements LovelaceCard {
 
     return html`
       <ha-card>
-        <div style="${styles.join(';')}">${element}</div>
+        <div render-id="${this._forceRender}" style="${styles.join(';')}">${element}</div>
       </ha-card>
     `;
   }
