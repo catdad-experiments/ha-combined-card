@@ -45,7 +45,7 @@ class CombinedCard extends LitElement implements LovelaceCard {
       const tryToGetSize = async () => {
         const el = that._createCard(that._config as LovelaceCardConfig);
 
-        if (el.getCardSize) {
+        if (el && el.getCardSize) {
           return await el.getCardSize();
         }
 
@@ -91,22 +91,29 @@ class CombinedCard extends LitElement implements LovelaceCard {
 
     clearTimeout(this._timer);
 
-    if (!(this._config && this._helpers)) {
-      LOG(`Rendering card: { config: ${!!this._config}, helpers: ${HELPERS.loaded} }`);
+    const loaded = this._config && this._helpers;
 
+    if (!loaded) {
       this._timer = setTimeout(() => {
+        LOG('re-render loading card');
         that._forceRender = getRandomId();
       }, 1000);
-
-      return this._loading();
     }
 
-    const element = this._createCard(this._config);
-    const styles = [
+    const element = loaded ?
+      this._createCard(this._config as LovelaceCardConfig) :
+      'Loading...';
+
+    const styles = loaded ? [
       '--ha-card-border-width: 0px',
       '--ha-card-border-color: rgba(0, 0, 0, 0)',
       '--ha-card-box-shadow: none',
       '--ha-card-border-radius: none'
+    ] : [
+      'height: 50px',
+      'padding: var(--spacing, 12px)',
+      'display: flex',
+      'align-items: center'
     ];
 
     return html`
@@ -116,23 +123,10 @@ class CombinedCard extends LitElement implements LovelaceCard {
     `;
   }
 
-  private _loading(): LovelaceCard {
-    LOG('render loading card');
-
-    const style = [
-      'height: 50px',
-      'padding: var(--spacing, 12px)',
-      'display: flex',
-      'align-items: center'
-    ];
-
-    return html`<ha-card render-id="${this._forceRender}" style="${style.join(';')}" class="loading">Loading...</ha-card>` as any as LovelaceCard;
-  }
-
-  private _createCard(config: LovelaceCardConfig): LovelaceCard {
+  private _createCard(config: LovelaceCardConfig): LovelaceCard | null {
     // TODO does this need to be removed?
     if (!this._helpers) {
-      return this._loading();
+      return null;
     }
 
     const element: LovelaceCard = this._helpers.createCardElement({
@@ -179,8 +173,10 @@ class CombinedCard extends LitElement implements LovelaceCard {
     cardElToReplace: LovelaceCard,
     config: LovelaceCardConfig
   ): void {
+    LOG('doing a bad manual rebuild');
+
     const newCardEl = this._createCard(config);
-    if (cardElToReplace.parentElement) {
+    if (cardElToReplace.parentElement && newCardEl) {
       cardElToReplace.parentElement.replaceChild(newCardEl, cardElToReplace);
     }
   }
