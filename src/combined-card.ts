@@ -126,7 +126,7 @@ class CombinedCard extends LitElement implements LovelaceCard {
       'align-items: center'
     ];
 
-    return html`<ha-card style="${style.join(';')}" class="loading">Loading...</ha-card>` as any as LovelaceCard;
+    return html`<ha-card render-id="${this._forceRender}" style="${style.join(';')}" class="loading">Loading...</ha-card>` as any as LovelaceCard;
   }
 
   private _createCard(config: LovelaceCardConfig): LovelaceCard {
