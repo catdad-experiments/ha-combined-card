@@ -3,14 +3,18 @@ import { state, customElement } from "lit/decorators.js";
 import { HomeAssistant, LovelaceCardConfig, LovelaceCard } from 'custom-card-helpers';
 import { NAME, EDITOR_NAME, HELPERS, LOG, loadStackEditor } from './utils';
 
+const getRandomId = (): string => Math.random().toString(36).slice(2);
+
 @customElement(NAME)
 class CombinedCard extends LitElement implements LovelaceCard {
   @state() private _config?: LovelaceCardConfig;
   @state() private _helpers?;
+  @state() private _forceRender: string = getRandomId();
 
   private _card?: LovelaceCard;
   private _hass?: HomeAssistant;
   private _editMode: boolean = false;
+  private _timer?: number;
 
   set hass(hass: HomeAssistant) {
     this._hass = hass;
@@ -41,7 +45,7 @@ class CombinedCard extends LitElement implements LovelaceCard {
       const tryToGetSize = async () => {
         const el = that._createCard(that._config as LovelaceCardConfig);
 
-        if (el.getCardSize) {
+        if (el && el.getCardSize) {
           return await el.getCardSize();
         }
 
@@ -83,43 +87,46 @@ class CombinedCard extends LitElement implements LovelaceCard {
   }
 
   protected render() {
-    if (!(this._config && this._helpers)) {
-      LOG(`Rendering card: { config: ${!!this._config}, helpers: ${HELPERS.loaded} }`);
-      return this._loading();
+    const that = this;
+
+    clearTimeout(this._timer);
+
+    const loaded = this._config && this._helpers;
+
+    if (!loaded) {
+      this._timer = setTimeout(() => {
+        LOG('re-render loading card');
+        that._forceRender = getRandomId();
+      }, 1000);
     }
 
-    const element = this._createCard(this._config);
-    const styles = [
+    const element = loaded ?
+      this._createCard(this._config as LovelaceCardConfig) :
+      'Loading...';
+
+    const styles = loaded ? [
       '--ha-card-border-width: 0px',
       '--ha-card-border-color: rgba(0, 0, 0, 0)',
       '--ha-card-box-shadow: none',
       '--ha-card-border-radius: none'
-    ];
-
-    return html`
-      <ha-card>
-        <div style="${styles.join(';')}">${element}</div>
-      </ha-card>
-    `;
-  }
-
-  private _loading(): LovelaceCard {
-    LOG('render loading card');
-
-    const style = [
+    ] : [
       'height: 50px',
       'padding: var(--spacing, 12px)',
       'display: flex',
       'align-items: center'
     ];
 
-    return html`<ha-card style="${style.join(';')}" class="loading">Loading...</ha-card>` as any as LovelaceCard;
+    return html`
+      <ha-card>
+        <div render-id="${this._forceRender}" style="${styles.join(';')}">${element}</div>
+      </ha-card>
+    `;
   }
 
-  private _createCard(config: LovelaceCardConfig): LovelaceCard {
+  private _createCard(config: LovelaceCardConfig): LovelaceCard | null {
     // TODO does this need to be removed?
     if (!this._helpers) {
-      return this._loading();
+      return null;
     }
 
     const element: LovelaceCard = this._helpers.createCardElement({
@@ -166,8 +173,10 @@ class CombinedCard extends LitElement implements LovelaceCard {
     cardElToReplace: LovelaceCard,
     config: LovelaceCardConfig
   ): void {
+    LOG('doing a bad manual rebuild');
+
     const newCardEl = this._createCard(config);
-    if (cardElToReplace.parentElement) {
+    if (cardElToReplace.parentElement && newCardEl) {
       cardElToReplace.parentElement.replaceChild(newCardEl, cardElToReplace);
     }
   }
