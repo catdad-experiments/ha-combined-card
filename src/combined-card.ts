@@ -40,29 +40,19 @@ class CombinedCard extends LitElement implements LovelaceCard {
 
     const that = this;
 
-    const size: number = await new Promise(r => {
-      const tryToGetSize = async () => {
-        const el = that._createCard(that._config as LovelaceCardConfig);
+    const size = await (async function recursiveGetSize() {
+      const el = that._createCard(that._config as LovelaceCardConfig);
 
-        if (el && el.getCardSize) {
-          return await el.getCardSize();
+      if (el && el.getCardSize) {
+        const size = await el.getCardSize();
+
+        if (typeof size === 'number') {
+          return size;
         }
+      }
 
-        return null;
-      };
-
-      const recurse = () => {
-        tryToGetSize().then((size: null | number) => {
-          if (typeof size === 'number') {
-            return r(size);
-          }
-
-          setTimeout(() => recurse(), 50);
-        });
-      };
-
-      recurse();
-    });
+      return await recursiveGetSize();
+    })();
 
     return size;
   }
