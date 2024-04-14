@@ -177,7 +177,7 @@ class CombinedCard extends LitElement implements LovelaceCard {
 
   static getStubConfig() {
     return {
-      type: 'custom:combined-card',
+      type: `custom:${NAME}`,
       cards: []
     };
   }
