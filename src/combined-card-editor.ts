@@ -1,6 +1,6 @@
 import { html, LitElement } from "lit";
 import { HomeAssistant, LovelaceCardConfig, LovelaceCardEditor, LovelaceConfig } from 'custom-card-helpers';
-import { NAME, EDITOR_NAME, LOG } from './utils';
+import { NAME, EDITOR_NAME, LOG_EDITOR as LOG } from './utils';
 
 class CombinedCardEditor extends LitElement implements LovelaceCardEditor {
   private _hass?: HomeAssistant;
