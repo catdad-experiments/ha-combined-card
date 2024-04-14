@@ -48,13 +48,6 @@ export const HELPERS = ((loadCardHelpers, callbacks: fn[]) => {
   });
 
   return {
-    push: (func: fn) => {
-      if (_helpers) {
-        func();
-      } else {
-        callbacks.push(func);
-      }
-    },
     get helpers() {
       return _helpers;
     },
