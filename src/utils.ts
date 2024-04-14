@@ -11,6 +11,8 @@ export const LOG = (first: string, ...args: any[]) => {
 
 LOG('loaded');
 
+export const sleep = (time: number): Promise<undefined> => new Promise(resolve => setTimeout(() => resolve(undefined), time));
+
 // Home Assistant really needs to make this an SDK so that we can
 // stop trying to hack it. When they use these helpers, they can
 // use them synchronously, but third-party devs can't.

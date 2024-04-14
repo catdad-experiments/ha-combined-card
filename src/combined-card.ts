@@ -1,7 +1,7 @@
 import { css, CSSResultGroup, html, LitElement } from "lit";
 import { state } from "lit/decorators.js";
 import { HomeAssistant, LovelaceCardConfig, LovelaceCard } from 'custom-card-helpers';
-import { NAME, EDITOR_NAME, HELPERS, LOG, loadStackEditor } from './utils';
+import { NAME, EDITOR_NAME, HELPERS, LOG, loadStackEditor, sleep } from './utils';
 
 const getRandomId = (): string => Math.random().toString(36).slice(2);
 
@@ -38,9 +38,7 @@ class CombinedCard extends LitElement implements LovelaceCard {
 
     await HELPERS.whenLoaded;
 
-    const that = this;
-
-    const size = await (async function recursiveGetSize() {
+    return await (async function recursiveGetSize(that) {
       const el = that._createCard(that._config as LovelaceCardConfig);
 
       if (el && el.getCardSize) {
@@ -51,10 +49,10 @@ class CombinedCard extends LitElement implements LovelaceCard {
         }
       }
 
-      return await recursiveGetSize();
-    })();
+      await sleep(50);
 
-    return size;
+      return await recursiveGetSize(that);
+    })(this);
   }
 
   public setConfig(config: LovelaceCardConfig): void {
