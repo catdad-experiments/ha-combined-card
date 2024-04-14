@@ -1,11 +1,10 @@
 import { css, CSSResultGroup, html, LitElement } from "lit";
-import { state, customElement } from "lit/decorators.js";
+import { state } from "lit/decorators.js";
 import { HomeAssistant, LovelaceCardConfig, LovelaceCard } from 'custom-card-helpers';
 import { NAME, EDITOR_NAME, HELPERS, LOG, loadStackEditor } from './utils';
 
 const getRandomId = (): string => Math.random().toString(36).slice(2);
 
-@customElement(NAME)
 class CombinedCard extends LitElement implements LovelaceCard {
   @state() private _config?: LovelaceCardConfig;
   @state() private _helpers?;
@@ -183,3 +182,5 @@ class CombinedCard extends LitElement implements LovelaceCard {
     };
   }
 }
+
+customElements.define(NAME, CombinedCard);
