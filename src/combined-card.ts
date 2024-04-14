@@ -104,6 +104,18 @@ class CombinedCard extends LitElement implements LovelaceCard {
       this._createCard(this._config as LovelaceCardConfig) :
       'Loading...';
 
+    if (element && (element as LovelaceCard).addEventListener) {
+      (element as LovelaceCard).addEventListener(
+        'll-rebuild',
+        (ev) => {
+          LOG('rebuild event!!!');
+          ev.stopPropagation();
+          that._forceRender = getRandomId();
+        },
+        { once: true },
+      );
+    }
+
     const styles = loaded ? [
       '--ha-card-border-width: 0px',
       '--ha-card-border-color: rgba(0, 0, 0, 0)',
@@ -142,43 +154,7 @@ class CombinedCard extends LitElement implements LovelaceCard {
 
     element.editMode = this._editMode;
 
-    if (element) {
-      element.addEventListener(
-        'll-rebuild',
-        (ev) => {
-          ev.stopPropagation();
-          this._rebuildCard(element, config);
-        },
-        { once: true },
-      );
-    }
-
     return element;
-  }
-
-  private _rebuildSelf(): void {
-    const cardElToReplace = this._card as LovelaceCard;
-    const config = this._config as LovelaceCardConfig;
-
-    if (!cardElToReplace || !config) {
-      return;
-    }
-
-    this._rebuildCard(cardElToReplace, config);
-  }
-
-  // TODO is this a mistake? should we just re-render the card instead?
-  // I don't actually remember when this does execute
-  private _rebuildCard(
-    cardElToReplace: LovelaceCard,
-    config: LovelaceCardConfig
-  ): void {
-    LOG('doing a bad manual rebuild');
-
-    const newCardEl = this._createCard(config);
-    if (cardElToReplace.parentElement && newCardEl) {
-      cardElToReplace.parentElement.replaceChild(newCardEl, cardElToReplace);
-    }
   }
 
   static get styles(): CSSResultGroup {
