@@ -5,11 +5,20 @@ export type fn = (...args: any[]) => void;
 export const NAME = 'combined-card';
 export const EDITOR_NAME = `${NAME}-editor`;
 
+const pillStyle = (color: string) => `color: ${color}; font-weight: bold; background: #555; border-radius: 2rem`;
+const pillText = (text: string) => `%c ${text} \x1B[m`;
+
 export const LOG = (first: string, ...args: any[]) => {
-  console.log(`%c ${NAME} v${pjson.version} \x1B[m ${first}`, 'color: #bad155; font-weight: bold; background: #555; border-radius: 2rem;', ...args);
+  console.log(`${pillText(`${NAME} v${pjson.version}`)} ${first}`, pillStyle('#bad155'), ...args);
 };
 
+export const LOG_EDITOR = (first: string, ...args: any[]) => {
+  LOG(`${pillText('editor')} ${first}`, pillStyle('#D15798'), ...args);
+}
+
 LOG('loaded');
+
+export const sleep = (time: number): Promise<undefined> => new Promise(resolve => setTimeout(() => resolve(undefined), time));
 
 // Home Assistant really needs to make this an SDK so that we can
 // stop trying to hack it. When they use these helpers, they can
@@ -39,13 +48,6 @@ export const HELPERS = ((loadCardHelpers, callbacks: fn[]) => {
   });
 
   return {
-    push: (func: fn) => {
-      if (_helpers) {
-        func();
-      } else {
-        callbacks.push(func);
-      }
-    },
     get helpers() {
       return _helpers;
     },

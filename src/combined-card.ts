@@ -1,11 +1,10 @@
 import { css, CSSResultGroup, html, LitElement } from "lit";
-import { state, customElement } from "lit/decorators.js";
+import { state } from "lit/decorators.js";
 import { HomeAssistant, LovelaceCardConfig, LovelaceCard } from 'custom-card-helpers';
-import { NAME, EDITOR_NAME, HELPERS, LOG, loadStackEditor } from './utils';
+import { NAME, EDITOR_NAME, HELPERS, LOG, loadStackEditor, sleep } from './utils';
 
 const getRandomId = (): string => Math.random().toString(36).slice(2);
 
-@customElement(NAME)
 class CombinedCard extends LitElement implements LovelaceCard {
   @state() private _config?: LovelaceCardConfig;
   @state() private _helpers?;
@@ -39,33 +38,21 @@ class CombinedCard extends LitElement implements LovelaceCard {
 
     await HELPERS.whenLoaded;
 
-    const that = this;
+    return await (async function recursiveGetSize(that) {
+      const el = that._createCard(that._config as LovelaceCardConfig);
 
-    const size: number = await new Promise(r => {
-      const tryToGetSize = async () => {
-        const el = that._createCard(that._config as LovelaceCardConfig);
+      if (el && el.getCardSize) {
+        const size = await el.getCardSize();
 
-        if (el && el.getCardSize) {
-          return await el.getCardSize();
+        if (typeof size === 'number') {
+          return size;
         }
+      }
 
-        return null;
-      };
+      await sleep(50);
 
-      const recurse = () => {
-        tryToGetSize().then((size: null | number) => {
-          if (typeof size === 'number') {
-            return r(size);
-          }
-
-          setTimeout(() => recurse(), 50);
-        });
-      };
-
-      recurse();
-    });
-
-    return size;
+      return await recursiveGetSize(that);
+    })(this);
   }
 
   public setConfig(config: LovelaceCardConfig): void {
@@ -103,6 +90,18 @@ class CombinedCard extends LitElement implements LovelaceCard {
     const element = loaded ?
       this._createCard(this._config as LovelaceCardConfig) :
       'Loading...';
+
+    if (element && (element as LovelaceCard).addEventListener) {
+      (element as LovelaceCard).addEventListener(
+        'll-rebuild',
+        (ev) => {
+          LOG('rebuild event!!!');
+          ev.stopPropagation();
+          that._forceRender = getRandomId();
+        },
+        { once: true },
+      );
+    }
 
     const styles = loaded ? [
       '--ha-card-border-width: 0px',
@@ -142,43 +141,7 @@ class CombinedCard extends LitElement implements LovelaceCard {
 
     element.editMode = this._editMode;
 
-    if (element) {
-      element.addEventListener(
-        'll-rebuild',
-        (ev) => {
-          ev.stopPropagation();
-          this._rebuildCard(element, config);
-        },
-        { once: true },
-      );
-    }
-
     return element;
-  }
-
-  private _rebuildSelf(): void {
-    const cardElToReplace = this._card as LovelaceCard;
-    const config = this._config as LovelaceCardConfig;
-
-    if (!cardElToReplace || !config) {
-      return;
-    }
-
-    this._rebuildCard(cardElToReplace, config);
-  }
-
-  // TODO is this a mistake? should we just re-render the card instead?
-  // I don't actually remember when this does execute
-  private _rebuildCard(
-    cardElToReplace: LovelaceCard,
-    config: LovelaceCardConfig
-  ): void {
-    LOG('doing a bad manual rebuild');
-
-    const newCardEl = this._createCard(config);
-    if (cardElToReplace.parentElement && newCardEl) {
-      cardElToReplace.parentElement.replaceChild(newCardEl, cardElToReplace);
-    }
   }
 
   static get styles(): CSSResultGroup {
@@ -202,16 +165,10 @@ class CombinedCard extends LitElement implements LovelaceCard {
 
   static getStubConfig() {
     return {
-      type: 'custom:combined-card',
+      type: `custom:${NAME}`,
       cards: []
     };
   }
 }
 
-// Note: this is what adds the card to the UI card selector
-(window as any).customCards = (window as any).customCards || [];
-(window as any).customCards.push({
-  type: NAME,
-  name: "Combined Card",
-  description: "Combine a stack of cards into a single seamless card",
-});
+customElements.define(NAME, CombinedCard);
