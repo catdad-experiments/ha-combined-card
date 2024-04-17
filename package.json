@@ -1,6 +1,6 @@
 {
   "name": "ha-combined-card",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Home Assistant card that seemlessly combines multiple other cards into one",
   "scripts": {
     "start": "node .esbuild.js --watch --dev",
