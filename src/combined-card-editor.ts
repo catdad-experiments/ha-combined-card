@@ -6,6 +6,7 @@ class CombinedCardEditor extends LitElement implements LovelaceCardEditor {
   private _hass?: HomeAssistant;
   private _lovelace?: LovelaceConfig;
   private _stackCardEditor?;
+  private _config = {};
 
   private _setEditorConfig(config: LovelaceCardConfig) {
     // @ts-ignore
@@ -18,20 +19,23 @@ class CombinedCardEditor extends LitElement implements LovelaceCardEditor {
   }
 
   setConfig(config: LovelaceCardConfig): void {
-    LOG('setConfig', config);
-    this._setEditorConfig(config);
+    this._config = {
+      ...this._config,
+      ...config
+    };
+
+    LOG('setConfig', this._config);
+    this._setEditorConfig(this._config as LovelaceCardConfig);
   }
 
-  configChanged(newCondfig: LovelaceCardConfig): void {
+  configChanged(newConfig: LovelaceCardConfig): void {
     const event = new Event('config-changed', {
       bubbles: true,
       composed: true
     });
 
     // @ts-ignore
-    event.detail = { config: newCondfig };
-
-    LOG('configChanged', newCondfig);
+    event.detail = { config: newConfig };
 
     this.dispatchEvent(event);
   }
@@ -51,6 +55,7 @@ class CombinedCardEditor extends LitElement implements LovelaceCardEditor {
       ev.stopPropagation();
 
       this.configChanged({
+        ...this._config,
         ...ev.detail.config,
         type: `custom:${NAME}`
       });
