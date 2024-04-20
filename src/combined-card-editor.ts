@@ -20,11 +20,11 @@ class CombinedCardEditor extends LitElement implements LovelaceCardEditor {
 
   setConfig(config: LovelaceCardConfig): void {
     this._config = {
-      ...this._config,
+      // I think this won't allow removing the hidden values
+      // ...this._config,
       ...config
     };
 
-    LOG('setConfig', this._config);
     this._setEditorConfig(this._config as LovelaceCardConfig);
   }
 
