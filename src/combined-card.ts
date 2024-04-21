@@ -32,7 +32,7 @@ class CombinedCard extends LitElement implements LovelaceCard {
   }
 
   private async getSizeFromComponentCard(): Promise<number> {
-    const size = await (async function recurseWaitForCard(that) {
+    return await (async function recurseWaitForCard(that) {
       if (that._card && that._card.getCardSize) {
         return await that._card.getCardSize();
       }
@@ -41,8 +41,6 @@ class CombinedCard extends LitElement implements LovelaceCard {
 
       return await recurseWaitForCard(that);
     })(this);
-
-    return size;
   }
 
   private async getSizeFromTempCard(): Promise<number> {
