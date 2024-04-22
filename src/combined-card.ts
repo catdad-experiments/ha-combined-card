@@ -31,13 +31,19 @@ class CombinedCard extends LitElement implements LovelaceCard {
     }
   }
 
-  public async getCardSize(): Promise<number> {
-    if (!this._config) {
-      return 0;
-    }
+  private async getSizeFromComponentCard(): Promise<number> {
+    return await (async function recurseWaitForCard(that) {
+      if (that._card && that._card.getCardSize) {
+        return await that._card.getCardSize();
+      }
 
-    await HELPERS.whenLoaded;
+      await sleep(10);
 
+      return await recurseWaitForCard(that);
+    })(this);
+  }
+
+  private async getSizeFromTempCard(): Promise<number> {
     return await (async function recursiveGetSize(that) {
       const el = that._createCard(that._config as LovelaceCardConfig);
 
@@ -49,10 +55,59 @@ class CombinedCard extends LitElement implements LovelaceCard {
         }
       }
 
-      await sleep(50);
+      await sleep(10);
 
       return await recursiveGetSize(that);
     })(this);
+  }
+
+  private async getSizeFromRenderedCards(): Promise<number> {
+    const configCards = this._config?.cards || [];
+    const helpers = this._helpers;
+
+    const sizes = await Promise.all(configCards.map(card => (async () => {
+      const el = await helpers.createCardElement(card);
+      return await el.getCardSize();
+    })()));
+
+    return sizes.reduce((a, b) => a + b);
+  }
+
+  public async getCardSize(): Promise<number> {
+    const size = await (async () => {
+      if (!this._config) {
+        return 0;
+      }
+
+      await HELPERS.whenLoaded;
+
+      if (this._config.size) {
+        return this._config.size;
+      }
+
+      switch (this._config.sizeAlgorithm) {
+        case 'temp':
+          // this renders the vertical stack again and asks it its size
+          // this is usually wrong (often smaller)
+          return await this.getSizeFromTempCard();
+        case 'render':
+          // this renders all the cards in config and asks all of their sizes
+          // it is also usually wrong, for similar reasons as temp
+          return await this.getSizeFromRenderedCards();
+        case 'component':
+          // this waits for the actual vertical stack to render and asks it its size
+          // this is very slow
+          return await this.getSizeFromComponentCard();
+        default:
+          // most custom and some first-party cards just return this
+          // it's probably a bug that led to more bugs in lovelace itself
+          return 4;
+      }
+    })();
+
+    LOG(`card size is ${size}`);
+
+    return size;
   }
 
   public setConfig(config: LovelaceCardConfig): void {
@@ -60,7 +115,7 @@ class CombinedCard extends LitElement implements LovelaceCard {
       throw new Error("Invalid configuration, `cards` is required");
     }
 
-    this._config = config;
+    this._config = Object.assign({}, CombinedCard.getStubConfig(), config);
     const that = this;
 
     if (HELPERS.loaded) {
@@ -166,7 +221,9 @@ class CombinedCard extends LitElement implements LovelaceCard {
   static getStubConfig() {
     return {
       type: `custom:${NAME}`,
-      cards: []
+      cards: [],
+      size: 0,
+      sizeAlgorithm: 'temp'
     };
   }
 }
