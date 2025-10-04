@@ -42,8 +42,17 @@ class KioskCard extends LitElement implements LovelaceCard {
       'height: 50px',
       'padding: var(--spacing, 12px)',
       'display: flex',
-      'align-items: center'
+      'align-items: center',
+      'justify-content: center',
     ];
+
+    if (this._editMode) {
+      return html`
+        <ha-card>
+          <div style="${styles.join(';')}">Kiosk mode card</div>
+        </ha-card>
+      `;
+    }
 
     try {
       const header = querySelectorDeep('ha-panel-lovelace .header');
@@ -61,11 +70,7 @@ class KioskCard extends LitElement implements LovelaceCard {
       LOG('failed to initiate kiosk mode', e);
     }
 
-    return html`
-      <ha-card>
-        <div style="${styles.join(';')}">This is the kiosk card ${this._editMode ? 'in edit mode' : ''}</div>
-      </ha-card>
-    `;
+    return null;
   }
 
   static get styles(): CSSResultGroup {
