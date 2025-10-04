@@ -1,5 +1,6 @@
 import { css, CSSResultGroup, html, LitElement } from "lit";
 import { state } from "lit/decorators.js";
+import { querySelectorDeep } from "query-selector-shadow-dom";
 import { HomeAssistant, LovelaceCardConfig, LovelaceCard } from 'custom-card-helpers';
 import { LOG } from './utils';
 
@@ -21,25 +22,6 @@ const getElementOrThrow = (parent: Document | Element | ShadowRoot, path: string
 
   return element;
 }
-
-const getRoot = (): HTMLElement => {
-  // TODO don't wing these so hard
-  const ha = getElementOrThrow(document, "body > home-assistant");
-  const main = getElementOrThrow(ha.shadowRoot!, "home-assistant-main");
-  const panel = getElementOrThrow(main.shadowRoot!, "ha-drawer > partial-panel-resolver > ha-panel-lovelace");
-  const root = getElementOrThrow(panel.shadowRoot!, "hui-root");
-
-  return root as HTMLElement;
-};
-
-const getHeader = (): HTMLElement => {
-  // TODO don't wing these so hard
-  return getElementOrThrow(getRoot().shadowRoot!, "div > div") as HTMLElement;
-};
-
-const getView = (): HTMLElement => {
-  return getElementOrThrow(getRoot().shadowRoot!, 'hui-view-container') as HTMLElement;
-};
 
 class KioskCard extends LitElement implements LovelaceCard {
   @state() private _config?: LovelaceCardConfig;
@@ -76,10 +58,14 @@ class KioskCard extends LitElement implements LovelaceCard {
     ];
 
     try {
-      const header = getHeader();
-      const view = getView();
+      const header = querySelectorDeep('ha-panel-lovelace .header');
+      const view = querySelectorDeep('ha-panel-lovelace hui-view-container');
 
       LOG('kiosk mode got elements:', { header, view });
+
+      if (!header || !view) {
+        throw new Error('could not find necessary elements to apply kiosk mode');
+      }
 
       header.style.display = 'none';
       view.style.paddingTop = '0px';

@@ -10,6 +10,9 @@
   "keywords": [],
   "author": "",
   "license": "MIT",
+  "dependencies": {
+    "query-selector-shadow-dom": "^1.0.1"
+  },
   "devDependencies": {
     "custom-card-helpers": "^1.9.0",
     "esbuild": "^0.20.1",
