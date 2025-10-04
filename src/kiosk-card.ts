@@ -5,6 +5,7 @@ import { HomeAssistant, LovelaceCardConfig, LovelaceCard } from 'custom-card-hel
 import { LOG } from './utils';
 
 const NAME = 'kiosk-card';
+const EDITOR_NAME = `${NAME}-editor`;
 
 export const card = {
   type: NAME,
@@ -81,16 +82,9 @@ class KioskCard extends LitElement implements LovelaceCard {
     `;
   }
 
-  // Note: this is what builds the visual editor for this card
-  // the actual element it is creating is the one in
-  // combined-card-editor.ts
-  // public static async getConfigElement() {
-  //   const element = document.createElement(EDITOR_NAME);
-  //   // @ts-ignore
-  //   element.cardEditor = await loadStackEditor();
-
-  //   return element;
-  // }
+  public static getConfigElement() {
+    return document.createElement(EDITOR_NAME);
+  }
 
   static getStubConfig() {
     return {
@@ -99,4 +93,14 @@ class KioskCard extends LitElement implements LovelaceCard {
   }
 }
 
+class KioskCardEditor extends LitElement {
+  setConfig() {}
+  configChanged() {}
+
+  render() {
+    return html`<div>This card has no options!</div>`;
+  }
+}
+
 customElements.define(NAME, KioskCard);
+customElements.define(EDITOR_NAME, KioskCardEditor);
