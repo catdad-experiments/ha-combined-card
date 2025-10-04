@@ -18,7 +18,6 @@ class KioskCard extends LitElement implements LovelaceCard {
   @state() private _editMode: boolean = false;
 
   private _hass?: HomeAssistant;
-  private _timer?: number;
 
   set hass(hass: HomeAssistant) {
     this._hass = hass;
@@ -26,6 +25,12 @@ class KioskCard extends LitElement implements LovelaceCard {
 
   set editMode(editMode: boolean) {
     this._editMode = editMode;
+
+    if (editMode) {
+      this.disconnectedCallback();
+    } else {
+      this.connectedCallback();
+    }
   }
 
   public async getCardSize(): Promise<number> {
@@ -36,22 +41,21 @@ class KioskCard extends LitElement implements LovelaceCard {
     this._config = Object.assign({}, KioskCard.getStubConfig(), config);
   }
 
-  protected render() {
-    clearTimeout(this._timer);
-
-    const styles = [
-      'height: 50px',
-      'padding: var(--spacing, 12px)',
-      'display: flex',
-      'align-items: center',
-      'justify-content: center',
-    ];
+  connectedCallback(): void {
+    super.connectedCallback()
+    LOG('Kiosk card connected', this._editMode);
 
     try {
       const header = querySelectorDeep('ha-panel-lovelace .header') as HTMLElement | null;
       const view = querySelectorDeep('ha-panel-lovelace hui-view-container') as HTMLElement | null;
+      const thisCard = querySelectorDeep(".catdad-kiosk-card") as HTMLElement | null;
 
-      LOG('kiosk mode got elements:', { header, view });
+      LOG('kiosk mode got elements:', { header, view, thisCard });
+
+      // when this card is not being rendered, it should not apply kiosk mode
+      if (!thisCard) {
+        return;
+      }
 
       if (!header || !view) {
         throw new Error('could not find necessary elements to apply kiosk mode');
@@ -65,18 +69,45 @@ class KioskCard extends LitElement implements LovelaceCard {
         view.style.paddingTop = '0px';
       }
     } catch (e) {
-      LOG('failed to initiate kiosk mode', e);
+      LOG('failed to connect kiosk mode', e);
     }
+  }
 
-    if (this._editMode) {
-      return html`
-        <ha-card>
-          <div style="${styles.join(';')}">Kiosk mode card</div>
-        </ha-card>
-      `;
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    LOG('Kiosk card disconnected');
+
+    try {
+      const header = querySelectorDeep('ha-panel-lovelace .header') as HTMLElement | null;
+      const view = querySelectorDeep('ha-panel-lovelace hui-view-container') as HTMLElement | null;
+
+      LOG('kiosk mode got elements:', { header, view });
+
+      if (!header || !view) {
+        throw new Error('could not find necessary elements to disconnect kiosk mode');
+      }
+
+      header.style.removeProperty('display');
+      view.style.removeProperty('padding-top');
+    } catch (e) {
+      LOG('failed to disconnect kiosk mode', e);
     }
+  }
 
-    return null;
+  protected render() {
+    const styles = [
+      'height: 50px',
+      'padding: var(--spacing, 12px)',
+      'display: flex',
+      'align-items: center',
+      'justify-content: center',
+    ];
+
+    return html`
+      <ha-card style=${`${this._editMode ? '' : 'display: none'}`}>
+        <div class="catdad-kiosk-card" style="${styles.join(';')}">Kiosk mode card</div>
+      </ha-card>
+    `;
   }
 
   static get styles(): CSSResultGroup {
