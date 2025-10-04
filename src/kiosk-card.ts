@@ -1,9 +1,15 @@
 import { css, CSSResultGroup, html, LitElement } from "lit";
 import { state } from "lit/decorators.js";
 import { HomeAssistant, LovelaceCardConfig, LovelaceCard } from 'custom-card-helpers';
-import { EDITOR_NAME, HELPERS, LOG, loadStackEditor, sleep } from './utils';
+import { HELPERS, LOG } from './utils';
 
 const NAME = 'kiosk-card';
+
+export const card = {
+  type: NAME,
+  name: 'Catdad: Kiosk Card',
+  description: 'Hide the navigation UI for the dashboard where this card is rendered'
+};
 
 const getRandomId = (): string => Math.random().toString(36).slice(2);
 
