@@ -46,9 +46,9 @@ class KioskCard extends LitElement implements LovelaceCard {
     LOG('Kiosk card connected', this._editMode);
 
     try {
-      const header = querySelectorDeep('ha-panel-lovelace .header') as HTMLElement | null;
-      const view = querySelectorDeep('ha-panel-lovelace hui-view-container') as HTMLElement | null;
-      const thisCard = querySelectorDeep(".catdad-kiosk-card") as HTMLElement | null;
+      const header = querySelectorDeep('ha-panel-lovelace .header');
+      const view = querySelectorDeep('ha-panel-lovelace hui-view-container');
+      const thisCard = querySelectorDeep('.catdad-kiosk-card');
 
       LOG('kiosk mode got elements:', { header, view, thisCard });
 
@@ -78,8 +78,8 @@ class KioskCard extends LitElement implements LovelaceCard {
     LOG('Kiosk card disconnected');
 
     try {
-      const header = querySelectorDeep('ha-panel-lovelace .header') as HTMLElement | null;
-      const view = querySelectorDeep('ha-panel-lovelace hui-view-container') as HTMLElement | null;
+      const header = querySelectorDeep('ha-panel-lovelace .header');
+      const view = querySelectorDeep('ha-panel-lovelace hui-view-container');
 
       LOG('kiosk mode got elements:', { header, view });
 
@@ -105,7 +105,7 @@ class KioskCard extends LitElement implements LovelaceCard {
 
     return html`
       <ha-card style=${`${this._editMode ? '' : 'display: none'}`}>
-        <div class="catdad-kiosk-card" style="${styles.join(';')}">Kiosk mode card</div>
+        <div class="catdad-kiosk-card" style=${styles.join(';')}>Kiosk mode card</div>
       </ha-card>
     `;
   }
