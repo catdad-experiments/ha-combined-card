@@ -47,17 +47,9 @@ class KioskCard extends LitElement implements LovelaceCard {
       'justify-content: center',
     ];
 
-    if (this._editMode) {
-      return html`
-        <ha-card>
-          <div style="${styles.join(';')}">Kiosk mode card</div>
-        </ha-card>
-      `;
-    }
-
     try {
-      const header = querySelectorDeep('ha-panel-lovelace .header');
-      const view = querySelectorDeep('ha-panel-lovelace hui-view-container');
+      const header = querySelectorDeep('ha-panel-lovelace .header') as HTMLElement | null;
+      const view = querySelectorDeep('ha-panel-lovelace hui-view-container') as HTMLElement | null;
 
       LOG('kiosk mode got elements:', { header, view });
 
@@ -65,10 +57,23 @@ class KioskCard extends LitElement implements LovelaceCard {
         throw new Error('could not find necessary elements to apply kiosk mode');
       }
 
-      header.style.display = 'none';
-      view.style.paddingTop = '0px';
+      if (this._editMode) {
+        header.style.removeProperty('display');
+        view.style.removeProperty('padding-top');
+      } else {
+        header.style.display = 'none';
+        view.style.paddingTop = '0px';
+      }
     } catch (e) {
       LOG('failed to initiate kiosk mode', e);
+    }
+
+    if (this._editMode) {
+      return html`
+        <ha-card>
+          <div style="${styles.join(';')}">Kiosk mode card</div>
+        </ha-card>
+      `;
     }
 
     return null;
