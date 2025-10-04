@@ -12,20 +12,8 @@ export const card = {
   description: 'Hide the navigation UI for the dashboard where this card is rendered'
 };
 
-const getRandomId = (): string => Math.random().toString(36).slice(2);
-
-const getElementOrThrow = (parent: Document | Element | ShadowRoot, path: string): Element => {
-  const element = parent.querySelector(path);
-  if (!element) {
-    throw new Error(`could not find element at "${path}"`);
-  }
-
-  return element;
-}
-
 class KioskCard extends LitElement implements LovelaceCard {
   @state() private _config?: LovelaceCardConfig;
-  @state() private _forceRender: string = getRandomId();
   @state() private _editMode: boolean = false;
 
   private _hass?: HomeAssistant;
