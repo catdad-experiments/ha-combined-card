@@ -1,7 +1,7 @@
 import { css, CSSResultGroup, html, LitElement } from "lit";
 import { state } from "lit/decorators.js";
 import { HomeAssistant, LovelaceCardConfig, LovelaceCard } from 'custom-card-helpers';
-import { HELPERS, LOG } from './utils';
+import { LOG } from './utils';
 
 const NAME = 'kiosk-card';
 
@@ -22,29 +22,27 @@ const getElementOrThrow = (parent: Document | Element | ShadowRoot, path: string
   return element;
 }
 
-const getHeader = (): HTMLElement => {
+const getRoot = (): HTMLElement => {
+  // TODO don't wing these so hard
   const ha = getElementOrThrow(document, "body > home-assistant");
   const main = getElementOrThrow(ha.shadowRoot!, "home-assistant-main");
   const panel = getElementOrThrow(main.shadowRoot!, "ha-drawer > partial-panel-resolver > ha-panel-lovelace");
   const root = getElementOrThrow(panel.shadowRoot!, "hui-root");
-  const header = getElementOrThrow(root.shadowRoot!, "div > div");
 
-  return header as HTMLElement;
+  return root as HTMLElement;
+};
+
+const getHeader = (): HTMLElement => {
+  // TODO don't wing these so hard
+  return getElementOrThrow(getRoot().shadowRoot!, "div > div") as HTMLElement;
 };
 
 const getView = (): HTMLElement => {
-  const ha = getElementOrThrow(document, "body > home-assistant");
-  const main = getElementOrThrow(ha.shadowRoot!, "home-assistant-main");
-  const panel = getElementOrThrow(main.shadowRoot!, "ha-drawer > partial-panel-resolver > ha-panel-lovelace");
-  const root = getElementOrThrow(panel.shadowRoot!, "hui-root");
-  const view = getElementOrThrow(root.shadowRoot!, 'hui-view-container');
-
-  return view as HTMLElement;
+  return getElementOrThrow(getRoot().shadowRoot!, 'hui-view-container') as HTMLElement;
 };
 
 class KioskCard extends LitElement implements LovelaceCard {
   @state() private _config?: LovelaceCardConfig;
-  @state() private _helpers?;
   @state() private _forceRender: string = getRandomId();
   @state() private _editMode: boolean = false;
 
@@ -65,16 +63,6 @@ class KioskCard extends LitElement implements LovelaceCard {
 
   public setConfig(config: LovelaceCardConfig): void {
     this._config = Object.assign({}, KioskCard.getStubConfig(), config);
-    const that = this;
-
-    if (HELPERS.loaded) {
-      this._helpers = HELPERS.helpers;
-    } else {
-      HELPERS.whenLoaded.then(() => {
-        LOG('re-rendering card after helpers have loaded');
-        that._helpers = HELPERS.helpers;
-      });
-    }
   }
 
   protected render() {
@@ -91,12 +79,12 @@ class KioskCard extends LitElement implements LovelaceCard {
       const header = getHeader();
       const view = getView();
 
-      console.log('kiosk mode got elements:', { header, view });
+      LOG('kiosk mode got elements:', { header, view });
 
       header.style.display = 'none';
       view.style.paddingTop = '0px';
     } catch (e) {
-      console.error('failed to initiate kiosk mode', e);
+      LOG('failed to initiate kiosk mode', e);
     }
 
     return html`
