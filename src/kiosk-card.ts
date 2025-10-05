@@ -27,9 +27,9 @@ class KioskCard extends LitElement implements LovelaceCard {
     this._editMode = editMode;
 
     if (editMode) {
-      this.disconnectedCallback();
+      this.disable();
     } else {
-      this.connectedCallback();
+      this.enable();
     }
   }
 
@@ -41,10 +41,7 @@ class KioskCard extends LitElement implements LovelaceCard {
     this._config = Object.assign({}, KioskCard.getStubConfig(), config);
   }
 
-  connectedCallback(): void {
-    super.connectedCallback()
-    LOG('Kiosk card connected', this._editMode);
-
+  private enable(): void {
     try {
       const header = querySelectorDeep('ha-panel-lovelace .header');
       const view = querySelectorDeep('ha-panel-lovelace hui-view-container');
@@ -73,10 +70,7 @@ class KioskCard extends LitElement implements LovelaceCard {
     }
   }
 
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    LOG('Kiosk card disconnected');
-
+  private disable(): void {
     try {
       const header = querySelectorDeep('ha-panel-lovelace .header');
       const view = querySelectorDeep('ha-panel-lovelace hui-view-container');
@@ -92,6 +86,18 @@ class KioskCard extends LitElement implements LovelaceCard {
     } catch (e) {
       LOG('failed to disconnect kiosk mode', e);
     }
+  }
+
+  connectedCallback(): void {
+    super.connectedCallback()
+    LOG('Kiosk card connected', this._editMode);
+    this.enable();
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    LOG('Kiosk card disconnected');
+    this.disable();
   }
 
   protected render() {
