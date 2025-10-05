@@ -1,7 +1,18 @@
-import { css, CSSResultGroup, html, LitElement } from "lit";
-import { state } from "lit/decorators.js";
+import { css, CSSResultGroup, html, LitElement } from 'lit';
+import { state } from 'lit/decorators.js';
 import { HomeAssistant, LovelaceCardConfig, LovelaceCard } from 'custom-card-helpers';
-import { NAME, EDITOR_NAME, HELPERS, LOG, loadStackEditor, sleep } from './utils';
+import { HELPERS, LOG, loadStackEditor, sleep } from './utils';
+
+import { editorFactory } from "./combined-card-editor";
+
+const NAME = 'combined-card';
+const EDITOR_NAME = `${NAME}-editor`;
+
+export const card = {
+  type: NAME,
+  name: "Catdad: Combined Card",
+  description: "Combine a stack of cards into a single seamless card",
+};
 
 const getRandomId = (): string => Math.random().toString(36).slice(2);
 
@@ -229,3 +240,4 @@ class CombinedCard extends LitElement implements LovelaceCard {
 }
 
 customElements.define(NAME, CombinedCard);
+customElements.define(EDITOR_NAME, editorFactory(NAME));

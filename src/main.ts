@@ -1,12 +1,6 @@
-import { NAME } from './utils';
-
-import "./combined-card";
-import "./combined-card-editor";
+import { card as combinedCard } from "./combined-card";
+import { card as kioskCard } from "./kiosk-card";
 
 // Note: this is what adds the card to the UI card selector
 (window as any).customCards = (window as any).customCards || [];
-(window as any).customCards.push({
-  type: NAME,
-  name: "Combined Card",
-  description: "Combine a stack of cards into a single seamless card",
-});
+(window as any).customCards.push(combinedCard, kioskCard);

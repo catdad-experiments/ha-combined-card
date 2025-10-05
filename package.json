@@ -10,7 +10,11 @@
   "keywords": [],
   "author": "",
   "license": "MIT",
+  "dependencies": {
+    "query-selector-shadow-dom": "^1.0.1"
+  },
   "devDependencies": {
+    "@types/query-selector-shadow-dom": "^1.0.4",
     "custom-card-helpers": "^1.9.0",
     "esbuild": "^0.20.1",
     "lit": "^3.1.2"
