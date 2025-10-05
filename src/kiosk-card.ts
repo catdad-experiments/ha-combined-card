@@ -47,7 +47,7 @@ class KioskCard extends LitElement implements LovelaceCard {
       const view = querySelectorDeep('ha-panel-lovelace hui-view-container');
       const thisCard = querySelectorDeep('.catdad-kiosk-card');
 
-      LOG('kiosk mode got elements:', { header, view, thisCard });
+      // LOG('kiosk mode got elements:', { header, view, thisCard });
 
       // when this card is not being rendered, it should not apply kiosk mode
       if (!thisCard) {
@@ -75,7 +75,7 @@ class KioskCard extends LitElement implements LovelaceCard {
       const header = querySelectorDeep('ha-panel-lovelace .header');
       const view = querySelectorDeep('ha-panel-lovelace hui-view-container');
 
-      LOG('kiosk mode got elements:', { header, view });
+      // LOG('kiosk mode got elements:', { header, view });
 
       if (!header || !view) {
         throw new Error('could not find necessary elements to disconnect kiosk mode');
@@ -90,19 +90,18 @@ class KioskCard extends LitElement implements LovelaceCard {
 
   connectedCallback(): void {
     super.connectedCallback()
-    LOG('Kiosk card connected', this._editMode);
+    // LOG('Kiosk card connected', this._editMode);
     this.enable();
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    LOG('Kiosk card disconnected');
+    // LOG('Kiosk card disconnected');
     this.disable();
   }
 
   protected render() {
     const styles = [
-      'height: 50px',
       'padding: var(--spacing, 12px)',
       'display: flex',
       'align-items: center',
