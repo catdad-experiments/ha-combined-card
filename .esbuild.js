@@ -15,7 +15,7 @@ const writeOutput = async file => {
   await fs.writeFile(path.resolve(OUTDIR, outname), file.contents);
 
   if (dev) {
-    await fs.writeFile(`P:/homeassistant/www/community/ha-combined-card/${outname}`, file.contents);
+    await fs.writeFile(`P:/homeassistant/www/community/ha-utility-cards/${outname}`, file.contents);
   }
 };
 
