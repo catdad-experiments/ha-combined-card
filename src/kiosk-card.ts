@@ -152,7 +152,10 @@ class KioskCardEditor extends LitElement {
         applied when the card is deemed "visible".
       </p>
       <p>
-        Consider using something like <a href="https://github.com/joseluis9595/lovelace-navbar-card" no-referrer no-opener>navbar card</a>
+        Consider using something like
+        <a href="https://github.com/joseluis9595/lovelace-navbar-card" rel="noopener noreferrer" target="_blank">
+          navbar card
+        </a>
         to create a custom navigation experience.
       </p>
     </div>`;
