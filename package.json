@@ -1,7 +1,7 @@
 {
-  "name": "ha-combined-card",
-  "version": "1.0.4",
-  "description": "Home Assistant card that seemlessly combines multiple other cards into one",
+  "name": "ha-utility-cards",
+  "version": "2.0.0",
+  "description": "Home Assistant cards to add more functionality to dashboards",
   "scripts": {
     "start": "node .esbuild.js --watch --dev",
     "build": "node .esbuild.js --prod",
