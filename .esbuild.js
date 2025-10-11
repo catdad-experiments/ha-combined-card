@@ -9,11 +9,13 @@ const dev = process.argv.includes('--dev');
 const watch = dev || process.argv.includes('--watch');
 const verbose = process.argv.includes('--verbose');
 
+const outname = `utility-cards.js`;
+
 const writeOutput = async file => {
-  await fs.writeFile(path.resolve(OUTDIR, 'combined-card.js'), file.contents);
+  await fs.writeFile(path.resolve(OUTDIR, outname), file.contents);
 
   if (dev) {
-    await fs.writeFile('P:/homeassistant/www/community/ha-combined-card/combined-card.js', file.contents);
+    await fs.writeFile(`P:/homeassistant/www/community/ha-combined-card/${outname}`, file.contents);
   }
 };
 

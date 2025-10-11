@@ -46,7 +46,7 @@ jobs:
           });
 
           console.log('created release', { release });
-          const files = ['./dist/combined-card.js', './README.md'];
+          const files = ['./dist/utility-cards.js', './README.md'];
 
           for (const file of files) {
             console.log('uploading', file);

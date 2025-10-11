@@ -1,6 +1,6 @@
 {
   "name": "Catdad Utility Cards",
-  "filename": "combined-card.js",
+  "filename": "utility-cards.js",
   "render_readme": true,
   "hide_default_branch": true,
   "homeassistant": "2025.10.0"
