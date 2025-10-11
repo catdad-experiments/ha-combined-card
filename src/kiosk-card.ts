@@ -110,7 +110,7 @@ class KioskCard extends LitElement implements LovelaceCard {
 
     return html`
       <ha-card style=${`${this._editMode ? '' : 'display: none'}`}>
-        <div class="catdad-kiosk-card" style=${styles.join(';')}>Kiosk mode card</div>
+        <div class="catdad-kiosk-card" style=${styles.join(';')}>Kiosk mode card placeholder</div>
       </ha-card>
     `;
   }
@@ -139,7 +139,23 @@ class KioskCardEditor extends LitElement {
   configChanged() {}
 
   render() {
-    return html`<div>This card has no options!</div>`;
+    return html`<div style="max-width: 80ch;">
+      <p>
+        When this card is used, it will remove the navigation header from the dashboard it is on.
+        The card itself will never actually show in your dashboard, but will display a placeholder
+        when in edit more, so you can edit or remove it easily.
+      </p>
+      <p>
+        While it has no configuration opions on this screen, you can use the "Visibility" tab to
+        configure rules for when this card will take effect. This card will only work when it is
+        "rendered" on the page. Meaning, if you define visibility rules, kiosk mode will only be
+        applied when the card is deemed "visible".
+      </p>
+      <p>
+        Consider using something like <a href="https://github.com/joseluis9595/lovelace-navbar-card" no-referrer no-opener>navbar card</a>
+        to create a custom navigation experience.
+      </p>
+    </div>`;
   }
 }
 
