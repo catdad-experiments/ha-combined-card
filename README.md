@@ -19,7 +19,7 @@ Here is a stack of cards created using [mushroom cards](https://github.com/piita
 
 This stack looks pretty nice on its own, but can become chaotic inside a dashboard with even more cards.
 
-With Combined Card, that entire stack can be placed inside a single card, giving it a better group look.
+With `combined-card`, that entire stack can be placed inside a single card, giving it a better group look.
 
 ![combined in single stack](https://github.com/catdad-experiments/ha-combined-card/assets/2205537/e7423047-8e49-4fa1-a8c7-22379ef81039)
 
