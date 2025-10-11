@@ -2,6 +2,10 @@
 
 This is a bunch of Home Assisatant Lovelace cards that enhance other cards or dashboard functionality. All cards include a visual editor so you can easily add them.
 
+## Installation
+
+In HACS, add the repo `https://github.com/catdad-experiments/ha-utility-cards` and select "Dashboard" for the type. Then search for "Catdad Unility Cards" and download it. You are done!
+
 ## Cards
 
 * [`combined-card`](#combined-card)
