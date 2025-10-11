@@ -4,8 +4,8 @@ This is a bunch of Home Assisatant Lovelace cards that enhance other cards or da
 
 ## Cards
 
-* `combined-card`
-* `kiosk-card`
+* [`combined-card`](#combined-card)
+* [`kiosk-card`](#kiosk-card)
 
 ## Combined Card
 
