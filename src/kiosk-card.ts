@@ -45,7 +45,7 @@ class KioskCard extends LitElement implements LovelaceCard {
     try {
       const header = querySelectorDeep('ha-panel-lovelace .header');
       const view = querySelectorDeep('ha-panel-lovelace hui-view-container');
-      const thisCard = querySelectorDeep('.catdad-kiosk-card');
+      const thisCard = querySelectorDeep('kiosk-card');
 
       // LOG('kiosk mode got elements:', { header, view, thisCard });
 
