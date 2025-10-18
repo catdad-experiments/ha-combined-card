@@ -189,10 +189,16 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
         : '👋';
 
     const debugElem = debug
-      ? html`<pre>${JSON.stringify({
-          lastStateUpdate: this._lastUpdated,
-          ...this.readStoredState()
-        }, null, 2)}</pre>`
+      ? html`
+          <pre>${JSON.stringify({
+            lastEntityUpdate: this._lastUpdated,
+            ...this.readStoredState()
+          }, null, 1)
+            .split(/,?\n/)
+            .map(l => l.trim())
+            .filter(l => !['{', '}'].includes(l))
+            .join('\n').trim()
+          }</pre>`
       : null;
 
     return html`
