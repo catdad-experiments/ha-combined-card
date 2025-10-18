@@ -34,7 +34,7 @@ class KioskCard extends LitElement implements LovelaceCard {
   }
 
   public async getCardSize(): Promise<number> {
-    return 4;
+    return this._editMode ? 4 : 0;
   }
 
   public setConfig(config: LovelaceCardConfig): void {
