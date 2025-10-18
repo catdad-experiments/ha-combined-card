@@ -7,6 +7,7 @@ import { LOG } from './utils';
 const NAME = 'catdad-auto-reload-card';
 
 type Timer = ReturnType<typeof setTimeout>;
+type Interval = ReturnType<typeof setInterval>;
 
 const minute = 1000 * 60;
 
@@ -27,6 +28,7 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
 
   private _hass?: HomeAssistant;
   private _disconnectTimer?: Timer;
+  private _refreshInterval?: Interval;
 
   set hass(hass: HomeAssistant) {
     this._hass = hass;
@@ -36,7 +38,6 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
     }
 
     this._disconnectTimer = setTimeout(() => {
-      console.log('has not updated in two minutes');
       location.reload();
     }, 2 * minute);
 
@@ -52,11 +53,11 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
   set editMode(editMode: boolean) {
     this._editMode = editMode;
 
-    // if (editMode) {
-    //   this.disable();
-    // } else {
-    //   this.enable();
-    // }
+    if (editMode) {
+      this.disable();
+    } else {
+      this.enable();
+    }
   }
 
   public async getCardSize(): Promise<number> {
@@ -69,64 +70,50 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
   }
 
   private enable(): void {
+    if (this._editMode) {
+      return;
+    }
+
     try {
-      const header = querySelectorDeep('ha-panel-lovelace .header');
-      const view = querySelectorDeep('ha-panel-lovelace hui-view-container');
-      const thisCard = querySelectorDeep('kiosk-card');
+      if (this._refreshInterval) {
+      clearInterval(this._refreshInterval);
+    }
 
-      // LOG('kiosk mode got elements:', { header, view, thisCard });
+    this._refreshInterval = setInterval(() => {
+      const toast = querySelectorDeep('home-assistant notification-manager ha-toast ha-button[slot=action]');
 
-      // when this card is not being rendered, it should not apply kiosk mode
-      if (!thisCard) {
-        return;
+      if (toast?.innerText.toLowerCase() === 'refresh') {
+        location.reload();
       }
+    }, 3000);
 
-      if (!header || !view) {
-        throw new Error('could not find necessary elements to apply kiosk mode');
-      }
-
-      if (this._editMode) {
-        header.style.removeProperty('display');
-        view.style.removeProperty('padding-top');
-      } else {
-        header.style.display = 'none';
-        view.style.paddingTop = '0px';
-      }
     } catch (e) {
-      LOG('failed to connect kiosk mode', e);
+      LOG(`failed to connect ${NAME}`, e);
     }
   }
 
   private disable(): void {
     try {
-      const header = querySelectorDeep('ha-panel-lovelace .header');
-      const view = querySelectorDeep('ha-panel-lovelace hui-view-container');
-
-      // LOG('kiosk mode got elements:', { header, view });
-
-      if (!header || !view) {
-        throw new Error('could not find necessary elements to disconnect kiosk mode');
+      if (this._disconnectTimer) {
+        clearTimeout(this._disconnectTimer);
       }
 
-      header.style.removeProperty('display');
-      view.style.removeProperty('padding-top');
+      if (this._refreshInterval) {
+        clearInterval(this._refreshInterval);
+      }
     } catch (e) {
-      LOG('failed to disconnect kiosk mode', e);
+      LOG(`failed to disconnect ${NAME}`, e);
     }
   }
 
   connectedCallback(): void {
-    super.connectedCallback()
-    // this.enable();
+    super.connectedCallback();
+    this.enable();
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-
-    if (this._disconnectTimer) {
-      clearTimeout(this._disconnectTimer);
-    }
-    // this.disable();
+    this.disable();
   }
 
   protected render() {
