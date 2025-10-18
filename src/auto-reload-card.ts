@@ -24,6 +24,7 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
   @state() private _config?: LovelaceCardConfig;
   @state() private _editMode: boolean = false;
   @state() private _lastUpdated: string = 'entity not found in state';
+  @state() private _debug: boolean = false;
 
   private _hass?: HomeAssistant;
   private _disconnectTimer?: Timer;
@@ -59,12 +60,13 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
     }
   }
 
-  public async getCardSize(): Promise<number> {
-    return 4;
+  public getCardSize(): number {
+    return this.showCard() ? 4 : 0;
   }
 
   public setConfig(config: LovelaceCardConfig): void {
     this._config = Object.assign({}, AutoReloadCard.getStubConfig(), config);
+    this._debug = !!this._config?.debug;
   }
 
   private enable(): void {
@@ -102,6 +104,10 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
     } catch (e) {
       LOG(`failed to disconnect ${NAME}`, e);
     }
+  }
+
+  private showCard(): boolean {
+    return this._debug || this._editMode;
   }
 
   private readStoredState(): StoredState {
@@ -168,16 +174,13 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
       'gap: calc(var(--spacing, 12px) / 4)',
     ];
 
-    const debug = !!this._config?.debug;
-    const show = this._editMode || debug;
-
-    const placeholder = this._editMode
-      ? 'Auto reload card placeholder'
-      : debug
-        ? 'Auto reload card debug info:'
+    const placeholder = this._debug
+      ? 'Auto reload card debug info:'
+      : this._editMode
+        ? 'Auto reload card placeholder'
         : '👋';
 
-    const debugElem = debug
+    const debugElem = this._debug
       ? html`<pre>${
           Object.entries({
             lastEntityUpdate: this._lastUpdated,
@@ -199,7 +202,7 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
       : null;
 
     return html`
-      <ha-card style=${`${show ? '' : 'display: none'}`}>
+      <ha-card style=${`${this.showCard() ? '' : 'display: none'}`}>
         <div style=${styles.join(';')}>
           <div>${placeholder}</div>
           ${debugElem}
