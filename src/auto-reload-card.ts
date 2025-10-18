@@ -9,11 +9,21 @@ const NAME = 'catdad-auto-reload-card';
 type Timer = ReturnType<typeof setTimeout>;
 type Interval = ReturnType<typeof setInterval>;
 
+type StoredState = {
+  lastRefresh: string;
+  disconnectCount: number;
+  updateCount: number;
+};
+
 const minute = 1000 * 60;
 
 const isDate = (value: unknown): value is Date => {
   return value instanceof Date && !isNaN(value.getTime());
 };
+
+const isNumber = (value: unknown): value is number => {
+  return typeof value === 'number' && isNaN(value) === false;
+}
 
 export const card = {
   type: NAME,
@@ -38,7 +48,7 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
     }
 
     this._disconnectTimer = setTimeout(() => {
-      location.reload();
+      this.refreshFromDisconnect();
     }, 2 * minute);
 
     if (this._config) {
@@ -65,7 +75,6 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
   }
 
   public setConfig(config: LovelaceCardConfig): void {
-    console.log('config was set', config);
     this._config = Object.assign({}, AutoReloadCard.getStubConfig(), config);
   }
 
@@ -83,7 +92,7 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
       const toast = querySelectorDeep('home-assistant notification-manager ha-toast ha-button[slot=action]');
 
       if (toast?.innerText.toLowerCase() === 'refresh') {
-        location.reload();
+        this.refreshFromUpdate();
       }
     }, 3000);
 
@@ -104,6 +113,50 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
     } catch (e) {
       LOG(`failed to disconnect ${NAME}`, e);
     }
+  }
+
+  private readStoredState(): StoredState {
+    try {
+      const state = JSON.parse(localStorage.getItem(NAME) || '{}');
+
+      return {
+        lastRefresh: typeof state.lastRefresh === 'string' ? state.lastRefresh : 'none',
+        disconnectCount: isNumber(state.disconnectCount) ? state.disconnectCount : 0,
+        updateCount: isNumber(state.updateCount) ? state.updateCount : 0,
+      };
+    } catch (e) {
+      return {
+        lastRefresh: 'none',
+        disconnectCount: 0,
+        updateCount: 0,
+      }
+    }
+  }
+
+  private writeStoredState(state: StoredState): void {
+    localStorage.setItem(NAME, JSON.stringify(state));
+  }
+
+  private refreshFromDisconnect(): void {
+    const state = this.readStoredState();
+    this.writeStoredState({
+      ...state,
+      lastRefresh: new Date().toISOString(),
+      disconnectCount: state.disconnectCount + 1
+    });
+
+    location.reload();
+  }
+
+  private refreshFromUpdate(): void {
+    const state = this.readStoredState();
+    this.writeStoredState({
+      ...state,
+      lastRefresh: new Date().toISOString(),
+      updateCount: state.updateCount + 1,
+    });
+
+    location.reload();
   }
 
   connectedCallback(): void {
@@ -132,14 +185,14 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
     const placeholder = this._editMode
       ? 'Auto reload card placeholder'
       : debug
-        ? 'Auto reload card debug info'
-        : '';
+        ? 'Auto reload card debug info:'
+        : '👋';
 
-    const lastUpdated = new Date(this._lastUpdated);
     const debugElem = debug
-      ? isDate(lastUpdated)
-        ? html`<div>last updated: ${lastUpdated.toLocaleString()}</div>`
-        : html`<div>${this._lastUpdated}</div>`
+      ? html`<pre>${JSON.stringify({
+          lastStateUpdate: this._lastUpdated,
+          ...this.readStoredState()
+        }, null, 2)}</pre>`
       : null;
 
     return html`
