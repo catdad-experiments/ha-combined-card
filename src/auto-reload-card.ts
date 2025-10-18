@@ -2,12 +2,9 @@ import { css, CSSResultGroup, html, LitElement } from "lit";
 import { state } from "lit/decorators.js";
 import { querySelectorDeep } from "query-selector-shadow-dom";
 import { HomeAssistant, LovelaceCardConfig, LovelaceCard } from 'custom-card-helpers';
-import { LOG } from './utils';
+import { type Interval, type Timer, LOG, isNumber } from './utils';
 
 const NAME = 'catdad-auto-reload-card';
-
-type Timer = ReturnType<typeof setTimeout>;
-type Interval = ReturnType<typeof setInterval>;
 
 type StoredState = {
   lastRefresh: string;
@@ -16,14 +13,6 @@ type StoredState = {
 };
 
 const minute = 1000 * 60;
-
-const isDate = (value: unknown): value is Date => {
-  return value instanceof Date && !isNaN(value.getTime());
-};
-
-const isNumber = (value: unknown): value is number => {
-  return typeof value === 'number' && isNaN(value) === false;
-}
 
 export const card = {
   type: NAME,

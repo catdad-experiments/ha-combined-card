@@ -93,3 +93,14 @@ export const loadStackEditor = async () => {
   // @ts-ignore
   return await stackCard.constructor.getConfigElement();
 };
+
+export const isDate = (value: unknown): value is Date => {
+  return value instanceof Date && !isNaN(value.getTime());
+};
+
+export const isNumber = (value: unknown): value is number => {
+  return typeof value === 'number' && isNaN(value) === false;
+};
+
+export type Timer = ReturnType<typeof setTimeout>;
+export type Interval = ReturnType<typeof setInterval>;
