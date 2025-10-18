@@ -2,7 +2,7 @@ import { css, CSSResultGroup, html, LitElement } from "lit";
 import { state } from "lit/decorators.js";
 import { querySelectorDeep } from "query-selector-shadow-dom";
 import { HomeAssistant, LovelaceCardConfig, LovelaceCard } from 'custom-card-helpers';
-import { type Interval, type Timer, LOG, isNumber } from './utils';
+import { type Interval, type Timer, LOG, isDate, isNumber } from './utils';
 
 const NAME = 'catdad-auto-reload-card';
 
@@ -178,16 +178,24 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
         : '👋';
 
     const debugElem = debug
-      ? html`
-          <pre>${JSON.stringify({
+      ? html`<pre>${
+          Object.entries({
             lastEntityUpdate: this._lastUpdated,
             ...this.readStoredState()
-          }, null, 1)
-            .split(/,?\n/)
-            .map(l => l.trim())
-            .filter(l => !['{', '}'].includes(l))
-            .join('\n').trim()
-          }</pre>`
+          }).map(([key,value]) => {
+            let serializedValue = value;
+
+            if (typeof value === 'string') {
+              const date = new Date(value);
+
+              if (isDate(date)) {
+                serializedValue = date.toLocaleString();
+              }
+            }
+
+            return `${key}: ${serializedValue}`;
+          }).join('\n')
+        }</pre>`
       : null;
 
     return html`
