@@ -126,15 +126,26 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
       'gap: calc(var(--spacing, 12px) / 4)',
     ];
 
+    const debug = !!this._config?.debug;
+    const show = this._editMode || debug;
+
+    const placeholder = this._editMode
+      ? 'Auto reload card placeholder'
+      : debug
+        ? 'Auto reload card debug info'
+        : '';
+
     const lastUpdated = new Date(this._lastUpdated);
-    const debugElem = isDate(lastUpdated)
-      ? html`<div>last updated: ${lastUpdated.toLocaleString()}</div>`
-      : html`<div>${this._lastUpdated}</div>`;
+    const debugElem = debug
+      ? isDate(lastUpdated)
+        ? html`<div>last updated: ${lastUpdated.toLocaleString()}</div>`
+        : html`<div>${this._lastUpdated}</div>`
+      : null;
 
     return html`
-      <ha-card style=${`${this._editMode ? '' : ''}`}>
+      <ha-card style=${`${show ? '' : 'display: none'}`}>
         <div style=${styles.join(';')}>
-          <div>Auto reload card placeholder</div>
+          <div>${placeholder}</div>
           ${debugElem}
         </div>
       </ha-card>
@@ -153,7 +164,12 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
     return {
       schema: [
         { name: "entity", required: true, selector: { entity: {} } },
-      ]
+        { name: "debug", selector: { boolean: {} } },
+      ],
+      computeLabel: (schema) => {
+        if (schema.name === "debug") return "Render card with debug information";
+        return undefined;
+      },
     };
   }
 
