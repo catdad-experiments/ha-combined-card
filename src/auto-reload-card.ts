@@ -2,14 +2,25 @@ import { css, CSSResultGroup, html, LitElement } from "lit";
 import { state } from "lit/decorators.js";
 import { querySelectorDeep } from "query-selector-shadow-dom";
 import { HomeAssistant, LovelaceCardConfig, LovelaceCard } from 'custom-card-helpers';
-import { type Interval, type Timer, LOG, isDate, isNumber } from './utils';
+import { type Interval, type Timer, LOG, isDate, isNumber, sleep } from './utils';
 
-const NAME = 'catdad-auto-reload-card';
+const NAME = 'catdad-auto-reload-card' as const;
+
+const lastScriptSrcAtLoad = [...(document.querySelectorAll('script') || [])].pop()?.getAttribute('src');
 
 type StoredState = {
   lastRefresh: string;
   disconnectCount: number;
   updateCount: number;
+  networkOutageCount: number;
+  failedRecoveryCount: number;
+};
+
+type Config = LovelaceCardConfig & {
+  type: `custom:${typeof NAME}`;
+  // HA doesn't seem to assert the `required` properties
+  entity?: string;
+  debug?: boolean;
 };
 
 const minute = 1000 * 60;
@@ -21,7 +32,7 @@ export const card = {
 };
 
 class AutoReloadCard extends LitElement implements LovelaceCard {
-  @state() private _config?: LovelaceCardConfig;
+  @state() private _config?: Config;
   @state() private _editMode: boolean = false;
   @state() private _lastUpdated: string = 'entity not found in state';
   @state() private _debug: boolean = false;
@@ -41,7 +52,7 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
       this.refreshFromDisconnect();
     }, 2 * minute);
 
-    if (this._config) {
+    if (this._config?.entity) {
       const state = hass.states[this._config.entity];
 
       if (state) {
@@ -64,7 +75,7 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
     return this.showCard() ? 4 : 0;
   }
 
-  public setConfig(config: LovelaceCardConfig): void {
+  public setConfig(config: Config): void {
     this._config = Object.assign({}, AutoReloadCard.getStubConfig(), config);
     this._debug = !!this._config?.debug;
   }
@@ -118,12 +129,16 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
         lastRefresh: typeof state.lastRefresh === 'string' ? state.lastRefresh : 'none',
         disconnectCount: isNumber(state.disconnectCount) ? state.disconnectCount : 0,
         updateCount: isNumber(state.updateCount) ? state.updateCount : 0,
+        networkOutageCount: isNumber(state.networkOutageCount) ? state.networkOutageCount : 0,
+        failedRecoveryCount: isNumber(state.failedRecoveryCount) ? state.failedRecoveryCount : 0,
       };
     } catch (e) {
       return {
         lastRefresh: 'none',
         disconnectCount: 0,
         updateCount: 0,
+        networkOutageCount: 0,
+        failedRecoveryCount: 0,
       }
     }
   }
@@ -140,7 +155,26 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
       disconnectCount: state.disconnectCount + 1
     });
 
-    location.reload();
+    this.ensureNetworkAccess().then((detectedIssue) => {
+      const state = this.readStoredState();
+      this.writeStoredState({
+        ...state,
+        lastRefresh: new Date().toISOString(),
+        networkOutageCount: state.networkOutageCount + Number(detectedIssue),
+      });
+
+      location.reload();
+    }).catch(() => {
+      const state = this.readStoredState();
+      this.writeStoredState({
+        ...state,
+        lastRefresh: new Date().toISOString(),
+        failedRecoveryCount: state.failedRecoveryCount + 1
+      });
+
+      // TODO should this reload or just leave the page alone?
+      location.reload();
+    });
   }
 
   private refreshFromUpdate(): void {
@@ -152,6 +186,32 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
     });
 
     location.reload();
+  }
+
+  private async ensureNetworkAccess(sleepTime: number = 2000, issueDetected: boolean = false): Promise<boolean> {
+    if (!lastScriptSrcAtLoad) {
+      LOG('cannot confirm HA is online, could not find a url to check');
+      return false;
+    }
+
+    const url = new URL(lastScriptSrcAtLoad);
+    url.searchParams.append('random', Math.random().toString(36).slice(2));
+
+    try {
+      const res = await fetch(url.toString());
+      const body = await res.text();
+
+      LOG(`HA online check successful`, {
+        status: res.status,
+        statusText: res.statusText,
+        bodyLength: body.length
+      });
+    } catch (e) {
+      await sleep(sleepTime);
+      return await this.ensureNetworkAccess(sleepTime + 1000, true);
+    }
+
+    return issueDetected;
   }
 
   connectedCallback(): void {
@@ -232,7 +292,7 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
     };
   }
 
-  static getStubConfig() {
+  static getStubConfig(): Partial<Config> & Pick<Config, 'type'> {
     return {
       type: `custom:${NAME}`,
     };

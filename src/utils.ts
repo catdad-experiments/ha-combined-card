@@ -94,6 +94,8 @@ export const loadStackEditor = async () => {
   return await stackCard.constructor.getConfigElement();
 };
 
+export const speed = (time: number): Promise<void> => new Promise(r => setTimeout(() => r(), time));
+
 export const isDate = (value: unknown): value is Date => {
   return value instanceof Date && !isNaN(value.getTime());
 };
