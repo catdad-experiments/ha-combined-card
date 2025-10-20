@@ -21,6 +21,7 @@ type Config = LovelaceCardConfig & {
   // HA doesn't seem to assert the `required` properties
   entity?: string;
   debug?: boolean;
+  debug_only_with_info?: boolean;
 };
 
 const minute = 1000 * 60;
@@ -78,6 +79,21 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
   public setConfig(config: Config): void {
     this._config = Object.assign({}, AutoReloadCard.getStubConfig(), config);
     this._debug = !!this._config?.debug;
+
+    this.debugOnlyWithInfo();
+  }
+
+  private debugOnlyWithInfo(storedState?: StoredState): void {
+    if (this._config?.debug) {
+      return;
+    }
+
+    if (this._config?.debug_only_with_info !== true) {
+      return;
+    }
+
+    this._debug = Object.values(storedState ?? this.readStoredState())
+      .some(value => isNumber(value) && value > 0);
   }
 
   private enable(): void {
@@ -145,6 +161,17 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
 
   private writeStoredState(state: StoredState): void {
     localStorage.setItem(NAME, JSON.stringify(state));
+    this.debugOnlyWithInfo(state);
+  }
+
+  private resetStoredState(): void {
+    this.writeStoredState({
+      lastRefresh: '',
+      disconnectCount: 0,
+      updateCount: 0,
+      networkOutageCount: 0,
+      failedRecoveryCount: 0
+    });
   }
 
   private refreshFromDisconnect(): void {
@@ -258,7 +285,11 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
 
             return `${key}: ${serializedValue}`;
           }).join('\n')
-        }</pre>`
+        }</pre>
+        <ha-control-button style="width: 100%" @click="${this.resetStoredState}">
+          <button type="button" class="button">Reset debug info</button>
+        </ha-control-button>
+        `
       : null;
 
     return html`
@@ -276,6 +307,26 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
       ha-card {
         overflow: hidden;
       }
+
+      .button {
+        position: relative;
+        display: block;
+        height: var(--feature-height, 42px);
+        width: 100%;
+        margin: 0;
+        padding: var(--control-button-padding);
+        outline: 0;
+        border: none;
+        border-radius: var(--control-button-border-radius);
+        cursor: pointer;
+
+        font-family: var(--ha-font-family-body);
+        font-weight: var(--ha-font-weight-medium);
+        background: 0 0;
+        font-size: inherit;
+        transition: box-shadow 180ms ease-in-out, color 180ms ease-in-out;
+        color: var(--control-button-icon-color);
+      }
     `;
   }
 
@@ -284,10 +335,17 @@ class AutoReloadCard extends LitElement implements LovelaceCard {
       schema: [
         { name: "entity", required: true, selector: { entity: {} } },
         { name: "debug", selector: { boolean: {} } },
+        { name: 'debug_only_with_info', selector: { boolean: {} }}
       ],
       computeLabel: (schema) => {
-        if (schema.name === "debug") return "Render card with debug information";
-        return undefined;
+        switch (schema.name) {
+          case 'debug':
+            return 'Always render the card with debug information';
+          case 'debug_only_with_info':
+            return 'Render debug information only when values exist';
+          default:
+            return undefined;
+        }
       },
     };
   }
