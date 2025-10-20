@@ -1,7 +1,7 @@
 import { css, CSSResultGroup, html, LitElement } from "lit";
 import { state } from "lit/decorators.js";
 import { querySelectorDeep } from "query-selector-shadow-dom";
-import { HomeAssistant, LovelaceCardConfig, LovelaceCard } from 'custom-card-helpers';
+import { type HomeAssistant, type LovelaceCardConfig, type LovelaceCard } from 'custom-card-helpers';
 import { type Interval, type Timer, LOG, isDate, isNumber, sleep } from './utils';
 
 const NAME = 'catdad-auto-reload-card' as const;
